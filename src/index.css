@@ -1,0 +1,100 @@
+body {
+  margin: 0;
+  font-family: system-ui, Arial;
+  background: #0b1220;
+  color: white;
+}
+
+/* layout */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* sidebar */
+.sidebar {
+  width: 220px;
+  background: #111827;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin: 0;
+}
+
+.sidebar p {
+  opacity: 0.6;
+  margin-bottom: 20px;
+}
+
+.sidebar button {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #2a3445;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* main */
+.main {
+  flex: 1;
+  padding: 30px;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  opacity: 0.6;
+}
+
+/* cards */
+.card {
+  background: #111827;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+/* inputs */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #2a3445;
+  background: #0b1220;
+  color: white;
+}
+
+/* button */
+button {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}
+
+/* ticket */
+.ticket {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #1f2937;
+}
+
+.muted {
+  opacity: 0.5;
+}
