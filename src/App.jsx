@@ -150,6 +150,40 @@ export default function App() {
 
   return (
     <div style={styles.app}>
+    <div
+  className="no-imprimir"
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  }}
+>
+  <h1 style={{ margin: 0 }}>🚗 DreamWash TPV</h1>
+
+  <div style={{ display: "flex", gap: 10 }}>
+    <button
+      style={styles.btnMenu}
+      onClick={() => setPantalla("tpv")}
+    >
+      🏠 TPV
+    </button>
+
+    <button
+      style={styles.btnMenu}
+      onClick={() => setPantalla("gestion")}
+    >
+      📊 Gestión
+    </button>
+
+    <button
+      style={styles.btnMenu}
+      onClick={() => setPantalla("config")}
+    >
+      ⚙️ Configuración
+    </button>
+  </div>
+</div>
       <style>{`
         @media print {
           body, html { margin: 0; padding: 0; width: 100%; background: #fff; }
@@ -554,5 +588,7 @@ const styles = {
   modalOverlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(15, 23, 42, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 },
   modalContent: { background: "white", padding: "40px", borderRadius: "20px", maxWidth: "400px", width: "90%", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" },
   modalCambioBox: { background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "15px", borderRadius: "12px", marginBottom: "25px" },
-  btnCerrarModal: { width: "100%", padding: "14px", background: "#1e293b", color: "white", border: "none", borderRadius: "10px", fontWeight: "700", fontSize: "15px", cursor: "pointer" }
+  btnCerrarModal: { width: "100%", padding: "14px", background: "#1e293b", color: "white", border: "none", borderRadius: "10px", fontWeight: "700", fontSize: "15px", cursor: "pointer" },
+  btnMenu: { padding: "10px 18px", border: "none", borderRadius: 8, cursor: "pointer", background: "#2563eb", color: "white", fontWeight: "bold" },
+  
 };
