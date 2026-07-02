@@ -220,15 +220,12 @@ export default function App() {
         </div>
       )}
 
-      {/* CABECERA */}
-      <div className="no-imprimir" style={styles.cabecera}>
-        <h1 style={styles.logo}>TPV DreamWash</h1>
-        <button onClick={() => setPantalla("config")} style={styles.btnConfig}>
-          ⚙️ Configuración
-        </button>
-      </div>
-
-      {/* CONTENEDOR PRINCIPAL */}
+      {/* CONTENEDOR PRINCIPAL */}ç
+      <div
+  style={{
+    flex: 1,
+  }}
+></div>
       {pantalla === "config" ? (
         <div style={styles.card}>
           <h2 style={{ ...styles.tituloSeccion, color: "#1f2937" }}>⚙️ Configuración</h2>
@@ -243,9 +240,69 @@ export default function App() {
             Volver al TPV
           </button>
         </div>
+        </div>
       ) : (
         <>
-          <div style={styles.contenedorPrincipal}>
+          <div
+  style={{
+    display: "flex",
+    gap: 20,
+    alignItems: "flex-start",
+  }}
+>
+<div
+  style={{
+    width: 220,
+    background: "#1e293b",
+    borderRadius: 16,
+    padding: 20,
+    color: "white",
+    minHeight: "calc(100vh - 40px)",
+    boxSizing: "border-box",
+  }}
+>
+  <h2 style={{ marginTop: 0, marginBottom: 30 }}>
+    🚗 DreamWash
+  </h2>
+
+  <button
+    style={{
+      ...styles.btnMenu,
+      width: "100%",
+      marginBottom: 10,
+      background:
+        pantalla === "tpv" ? "#10b981" : "#334155",
+    }}
+    onClick={() => setPantalla("tpv")}
+  >
+    🧾 TPV
+  </button>
+
+  <button
+    style={{
+      ...styles.btnMenu,
+      width: "100%",
+      marginBottom: 10,
+      background:
+        pantalla === "gestion" ? "#10b981" : "#334155",
+    }}
+    onClick={() => setPantalla("gestion")}
+  >
+    📊 Gestión
+  </button>
+
+  <button
+    style={{
+      ...styles.btnMenu,
+      width: "100%",
+      background:
+        pantalla === "config" ? "#10b981" : "#334155",
+    }}
+    onClick={() => setPantalla("config")}
+  >
+    ⚙️ Configuración
+  </button>
+</div>
             
             {/* COLUMNA IZQUIERDA */}
             <div style={styles.columnaIzquierda} className="no-imprimir">
@@ -589,6 +646,5 @@ const styles = {
   modalContent: { background: "white", padding: "40px", borderRadius: "20px", maxWidth: "400px", width: "90%", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" },
   modalCambioBox: { background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "15px", borderRadius: "12px", marginBottom: "25px" },
   btnCerrarModal: { width: "100%", padding: "14px", background: "#1e293b", color: "white", border: "none", borderRadius: "10px", fontWeight: "700", fontSize: "15px", cursor: "pointer" },
-  btnMenu: { padding: "10px 18px", border: "none", borderRadius: 8, cursor: "pointer", background: "#2563eb", color: "white", fontWeight: "bold" },
-  
+  btnMenu: { padding: "10px 18px", border: "none", borderRadius: 8, cursor: "pointer", background: "#2563eb", color: "white", fontWeight: "bold" }
 };
