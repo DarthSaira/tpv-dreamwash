@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Sidebar from "./components/Sidebar";
 
 const dataInicial = [
   {
@@ -240,7 +241,6 @@ export default function App() {
             Volver al TPV
           </button>
         </div>
-        </div>
       ) : (
         <>
           <div
@@ -250,60 +250,11 @@ export default function App() {
     alignItems: "flex-start",
   }}
 >
-<div
-  style={{
-    width: 220,
-    background: "#1e293b",
-    borderRadius: 16,
-    padding: 20,
-    color: "white",
-    minHeight: "calc(100vh - 40px)",
-    boxSizing: "border-box",
-  }}
->
-  <h2 style={{ marginTop: 0, marginBottom: 30 }}>
-    🚗 DreamWash
-  </h2>
-
-  <button
-    style={{
-      ...styles.btnMenu,
-      width: "100%",
-      marginBottom: 10,
-      background:
-        pantalla === "tpv" ? "#10b981" : "#334155",
-    }}
-    onClick={() => setPantalla("tpv")}
-  >
-    🧾 TPV
-  </button>
-
-  <button
-    style={{
-      ...styles.btnMenu,
-      width: "100%",
-      marginBottom: 10,
-      background:
-        pantalla === "gestion" ? "#10b981" : "#334155",
-    }}
-    onClick={() => setPantalla("gestion")}
-  >
-    📊 Gestión
-  </button>
-
-  <button
-    style={{
-      ...styles.btnMenu,
-      width: "100%",
-      background:
-        pantalla === "config" ? "#10b981" : "#334155",
-    }}
-    onClick={() => setPantalla("config")}
-  >
-    ⚙️ Configuración
-  </button>
-</div>
-            
+<Sidebar
+  pantalla={pantalla}
+  setPantalla={setPantalla}
+/>
+  
             {/* COLUMNA IZQUIERDA */}
             <div style={styles.columnaIzquierda} className="no-imprimir">
               {!pasoPago ? (
