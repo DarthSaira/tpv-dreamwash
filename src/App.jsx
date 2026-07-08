@@ -96,9 +96,9 @@ export default function App() {
     }
   };
 
-  const subtotal = seleccionados.reduce((acc, s) => acc + (s.precio * s.cantidad), 0);
-  const iva = subtotal * 0.21;
-  const total = subtotal + iva;
+  const total = seleccionados.reduce((acc, s) => acc + (s.precio * s.cantidad), 0);
+const subtotal = total / 1.21;
+const iva = total - subtotal;
   
   const totalEfectivo = ventas
     .filter((v) => v.metodoPago === "efectivo")
