@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
+import ServicioPersonalizado from "./components/ServicioPersonalizado";
 
 const dataInicial = [
   {
@@ -221,7 +222,7 @@ export default function App() {
         </div>
       )}
 
-      {/* CONTENEDOR PRINCIPAL */}ç
+      {/* CONTENEDOR PRINCIPAL */}
       <div
   style={{
     flex: 1,
@@ -304,11 +305,12 @@ export default function App() {
                           </button>
                         </div>
                         <ServicioPersonalizado
-                          onAdd={(servicio) => {
-                            agregarServicio(servicio);
-                            setMostrarPersonalizado(false);
-                          }}
-                        />
+  styles={styles}
+  onAdd={(servicio) => {
+    agregarServicio(servicio);
+    setMostrarPersonalizado(false);
+  }}
+/>
                       </div>
                     )}
                   </div>
@@ -539,26 +541,6 @@ export default function App() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function ServicioPersonalizado({ onAdd }) {
-  const [nombre, setNombre] = useState("");
-  const [precio, setPrecio] = useState("");
-
-  const agregar = () => {
-    if (!nombre || !precio) return;
-    onAdd({ id: Date.now(), nombre, precio: Number(precio) });
-    setNombre("");
-    setPrecio("");
-  };
-
-  return (
-    <div style={{ display: 'flex', gap: 10, marginTop: 5 }}>
-      <input style={{ ...styles.input, flex: 2 }} placeholder="Nombre del servicio (Ej: Pulido)" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-      <input style={{ ...styles.input, flex: 1 }} type="number" placeholder="Precio (€)" value={precio} onChange={(e) => setPrecio(e.target.value)} />
-      <button onClick={agregar} style={styles.btnPersonalizadoAdd}>Añadir</button>
     </div>
   );
 }
