@@ -19,7 +19,7 @@ export default function Ticket({
         <div style={styles.ticketFisico}>
   <div style={{ textAlign: "center", marginBottom: 15 }}>
     <h2 style={{ margin: "0 0 5px 0", fontSize: 22, fontWeight: "800", letterSpacing: "0.5px" }}>
-      DREAMWASH S.L.
+    YANLAI WORKSHOP
     </h2>
 
     <p style={{ margin: 0, fontSize: 12, color: "#6b7280" }}>

@@ -37,7 +37,7 @@ export default function App() {
     return guardadas ? JSON.parse(guardadas) : [];
   });
   
-  const [pantalla, setPantalla] = useState("tpv");
+  const [pantalla, setPantalla] = useState("home");
   const [pasoPago, setPasoPago] = useState(false);
   const [mostrarPersonalizado, setMostrarPersonalizado] = useState(false);
 
@@ -163,7 +163,7 @@ const iva = total - subtotal;
     marginBottom: 20,
   }}
 >
-  <h1 style={{ margin: 0 }}>🚗 DreamWash TPV</h1>
+  <h1 style={{ margin: 0 }}>🚗 Yanlai Workshop</h1>
 
   <div style={{ display: "flex", gap: 10 }}>
     <button
@@ -216,7 +216,61 @@ const iva = total - subtotal;
     flex: 1,
   }}
 ></div>
-      {pantalla === "config" ? (
+{pantalla === "home" ? (
+  <div style={styles.homePage}>
+    <div style={styles.homeHeader}>
+      <div style={styles.homeLogo}>🚗</div>
+
+      <div>
+        <h1 style={styles.homeTitle}>Yanlai Workshop</h1>
+        <p style={styles.homeSubtitle}>
+          ¿Qué quieres hacer ahora?
+        </p>
+      </div>
+    </div>
+
+    <div style={styles.homeGrid}>
+      <button
+        style={styles.homeCard}
+        onClick={() => setPantalla("recepcion")}
+      >
+        <div style={styles.homeCardIcon}>🚗</div>
+        <div>
+          <div style={styles.homeCardTitle}>Recepción</div>
+          <div style={styles.homeCardText}>
+            Crear una Orden de Trabajo
+          </div>
+        </div>
+      </button>
+
+      <button
+        style={styles.homeCard}
+        onClick={() => setPantalla("tpv")}
+      >
+        <div style={styles.homeCardIcon}>💳</div>
+        <div>
+          <div style={styles.homeCardTitle}>Cobro</div>
+          <div style={styles.homeCardText}>
+            Cobrar servicios u órdenes
+          </div>
+        </div>
+      </button>
+
+      <button
+        style={styles.homeCard}
+        onClick={() => setPantalla("gestion")}
+      >
+        <div style={styles.homeCardIcon}>📊</div>
+        <div>
+          <div style={styles.homeCardTitle}>Gestión</div>
+          <div style={styles.homeCardText}>
+            Ver taller, caja y operaciones
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+) : pantalla === "config" ? (
         <div style={styles.card}>
           <h2 style={{ ...styles.tituloSeccion, color: "#1f2937" }}>⚙️ Configuración</h2>
           <p style={{ color: "#4b5563", fontSize: 15, marginBottom: 10 }}>Aquí iremos añadiendo:</p>
@@ -483,5 +537,15 @@ const styles = {
   modalContent: { background: "white", padding: "40px", borderRadius: "20px", maxWidth: "400px", width: "90%", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" },
   modalCambioBox: { background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "15px", borderRadius: "12px", marginBottom: "25px" },
   btnCerrarModal: { width: "100%", padding: "14px", background: "#1e293b", color: "white", border: "none", borderRadius: "10px", fontWeight: "700", fontSize: "15px", cursor: "pointer" },
-  btnMenu: { padding: "10px 18px", border: "none", borderRadius: 8, cursor: "pointer", background: "#2563eb", color: "white", fontWeight: "bold" }
+  btnMenu: { padding: "10px 18px", border: "none", borderRadius: 8, cursor: "pointer", background: "#2563eb", color: "white", fontWeight: "bold" },
+  homePage: { maxWidth: "1100px", margin: "40px auto", },
+  homeHeader: { display: "flex", alignItems: "center", gap: 20, marginBottom: 40, }, 
+  homeLogo: { fontSize: 52, },
+  homeTitle: { margin: 0, fontSize: 34, fontWeight: "800", color: "#1e293b", },
+  homeSubtitle: { margin: "6px 0 0 0", fontSize: 18, color: "#64748b", },
+  homeGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 25, },
+  homeCard: { minHeight: "140px", background: "white", border: "1px solid #e2e8f0", borderRadius: 20, padding: 25, cursor: "pointer", display: "flex", alignItems: "center", gap: 20, textAlign: "left", boxShadow: "0 4px 12px rgba(0,0,0,0.05)", },
+  homeCardIcon: { fontSize: 42, },
+  homeCardTitle: { fontSize: 22, fontWeight: "700", color: "#1e293b", },
+  homeCardText: { marginTop: 6, fontSize: 15, color: "#64748b", },
 };
