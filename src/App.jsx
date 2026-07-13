@@ -1,11 +1,36 @@
 import { useState } from "react";
 import Home from "./Pages/home";
 import CobroRapido from "./modules/tpv/ModuloCobro";
-import Recepcion from "./modules/recepcion/recepcion";
-import Gestion from "./modules/gestion/Gestion";
+import Recepcion from "./Modules/recepcion/ModuloRecepcion";
+import Gestion from "./Modules/gestion/ModuloGestion";
+import { crearOrdenReparacion } from "./models/ordenReparacion";
 
 export default function App() {
   const [pantalla, setPantalla] = useState("home");
+  const [ordenesReparacion, setOrdenesReparacion] = useState([]);
+  const registrarOrdenReparacion = (datosRecepcion) => {
+    const nuevaOrden = crearOrdenReparacion({
+      numero: ordenesReparacion.length + 1,
+      ...datosRecepcion,
+    });
+  
+    setOrdenesReparacion((ordenesActuales) => [
+      ...ordenesActuales,
+      nuevaOrden,
+    ]);
+  
+    return nuevaOrden;
+  };
+
+  const actualizarOrdenReparacion = (idOrden, cambios) => {
+    setOrdenesReparacion((ordenesActuales) =>
+      ordenesActuales.map((orden) =>
+        orden.id === idOrden
+          ? { ...orden, ...cambios }
+          : orden
+      )
+    );
+  };
 
   return (
     <div style={styles.app}>
@@ -58,9 +83,16 @@ export default function App() {
                     />
                          </div>
            ) : pantalla === "recepcion" ? (
-            <Recepcion setPantalla={setPantalla} />
+            <Recepcion
+  setPantalla={setPantalla}
+  onCrearOrden={registrarOrdenReparacion}
+/>
           ) : pantalla === "gestion" ? (
-            <Gestion setPantalla={setPantalla} />
+            <Gestion
+  setPantalla={setPantalla}
+  ordenesReparacion={ordenesReparacion}
+  onActualizarOrden={actualizarOrdenReparacion}
+/>
           ) : (
             <div style={styles.card}>
               <h2>Módulo en preparación</h2>
