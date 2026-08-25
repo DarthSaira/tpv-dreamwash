@@ -4,6 +4,7 @@ import {
   IconoCliente,
   IconoDiagnostico,
   IconoMotivo,
+  IconoPresupuesto,
   IconoProgreso,
   IconoVehiculo,
 } from "../../components/WorkshopIcons";
@@ -23,6 +24,55 @@ export default function DetalleOrden({
   const [diagnostico, setDiagnostico] = useState(
     orden.diagnostico?.descripcion || ""
   );
+  const [conceptosPresupuesto, setConceptosPresupuesto] = useState(
+    orden.presupuesto?.conceptos || []
+  );
+  
+  const [nuevoConcepto, setNuevoConcepto] = useState({
+    descripcion: "",
+    cantidad: 1,
+    precioUnitario: "",
+  });
+  const agregarConcepto = () => {
+    const descripcion = nuevoConcepto.descripcion.trim();
+  
+    const cantidad = Number(
+      String(nuevoConcepto.cantidad).replace(",", ".")
+    );
+  
+    const precioUnitario = Number(
+      String(nuevoConcepto.precioUnitario).replace(",", ".")
+    );
+  
+    if (
+      !descripcion ||
+      !Number.isFinite(cantidad) ||
+      cantidad <= 0 ||
+      !Number.isFinite(precioUnitario) ||
+      precioUnitario < 0
+    ) {
+      return;
+    }
+  
+    const concepto = {
+      id: Date.now(),
+      descripcion,
+      cantidad,
+      precioUnitario,
+      total: Number((cantidad * precioUnitario).toFixed(2)),
+    };
+  
+    setConceptosPresupuesto((conceptosActuales) => [
+      ...conceptosActuales,
+      concepto,
+    ]);
+  
+    setNuevoConcepto({
+      descripcion: "",
+      cantidad: 1,
+      precioUnitario: "",
+    });
+  };
   const guardarDiagnostico = () => {
     const descripcionLimpia = diagnostico.trim();
   
@@ -142,6 +192,70 @@ export default function DetalleOrden({
   </div>
 </section>
   
+<section style={styles.tarjetaCompleta}>
+  <TituloSeccion
+    Icono={IconoPresupuesto}
+    titulo="Presupuesto"
+  />
+
+  <div style={styles.formularioPresupuesto}>
+    <label style={styles.labelPresupuesto}>
+      Concepto
+      <input
+        value={nuevoConcepto.descripcion}
+        onChange={(evento) =>
+          setNuevoConcepto({
+            ...nuevoConcepto,
+            descripcion: evento.target.value,
+          })
+        }
+        placeholder="Ej: Cambio de aceite"
+        style={styles.inputPresupuesto}
+      />
+    </label>
+
+    <label style={styles.labelPresupuesto}>
+      Cantidad
+      <input
+        type="number"
+        min="0.01"
+        step="0.01"
+        value={nuevoConcepto.cantidad}
+        onChange={(evento) =>
+          setNuevoConcepto({
+            ...nuevoConcepto,
+            cantidad: evento.target.value,
+          })
+        }
+        style={styles.inputPresupuesto}
+      />
+    </label>
+
+    <label style={styles.labelPresupuesto}>
+      Precio unitario
+      <input
+        inputMode="decimal"
+        value={nuevoConcepto.precioUnitario}
+        onChange={(evento) =>
+          setNuevoConcepto({
+            ...nuevoConcepto,
+            precioUnitario: evento.target.value,
+          })
+        }
+        placeholder="0,00 €"
+        style={styles.inputPresupuesto}
+      />
+    </label>
+
+    <button
+      type="button"
+      onClick={agregarConcepto}
+      style={styles.btnAgregarConcepto}
+    >
+      Añadir concepto
+    </button>
+  </div>
+</section>
           <section style={styles.tarjetaCompleta}>
           <TituloSeccion Icono={IconoProgreso} titulo="Progreso de la orden" />
   
@@ -167,6 +281,47 @@ export default function DetalleOrden({
   }
   
   const styles = {
+    formularioPresupuesto: {
+      display: "grid",
+      gridTemplateColumns: "2fr 0.7fr 1fr auto",
+      gap: 12,
+      alignItems: "end",
+    },
+
+    labelPresupuesto: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+      color: "#3f3f46",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+
+    inputPresupuesto: {
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "12px 13px",
+      background: "#ffffff",
+      color: "#27272a",
+      border: "1px solid #d4d4d8",
+      borderRadius: 10,
+      fontSize: 15,
+      fontFamily: "inherit",
+      outline: "none",
+    },
+
+    btnAgregarConcepto: {
+      padding: "12px 16px",
+      background: "#f5f3ff",
+      color: "#6d28d9",
+      border: "1px solid #ddd6fe",
+      borderRadius: 10,
+      cursor: "pointer",
+      fontSize: 14,
+      fontWeight: "700",
+      whiteSpace: "nowrap",
+    },
+
     pagina: {
       width: "100%",
       maxWidth: 1180,

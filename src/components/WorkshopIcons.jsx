@@ -60,8 +60,16 @@ const IconoBase = ({ children }) => (
     </IconoBase>
   );
   
+  export const IconoPresupuesto = () => (
+    <IconoBase>
+      <path d="M6 4h12v16H6z" />
+      <path d="M9 8h6M9 12h2M14 12h1M9 16h2M14 16h1" />
+    </IconoBase>
+  );
+
   export const IconoConfirmacion = () => (
     <IconoBase>
       <path d="m6 12 4 4 8-9" />
     </IconoBase>
+
   );

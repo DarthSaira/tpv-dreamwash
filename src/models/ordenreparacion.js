@@ -30,6 +30,16 @@ export function crearOrdenReparacion({
         fecha: null,
       },
 
+      presupuesto: {
+        conceptos: [],
+        subtotal: 0,
+        iva: 0,
+        total: 0,
+        estado: "pendiente",
+        fechaCreacion: null,
+        fechaAprobacion: null,
+      },
+
 diagnostico: {
   descripcion: "",
   fecha: null,
