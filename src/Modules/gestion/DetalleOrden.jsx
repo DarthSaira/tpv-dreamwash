@@ -1,4 +1,45 @@
-export default function DetalleOrden({ orden, onVolver }) {
+import { useState } from "react";
+
+import {
+  IconoCliente,
+  IconoDiagnostico,
+  IconoMotivo,
+  IconoProgreso,
+  IconoVehiculo,
+} from "../../components/WorkshopIcons";
+
+const TituloSeccion = ({ Icono, titulo }) => (
+  <div style={styles.cabeceraSeccion}>
+    <Icono />
+    <h2 style={styles.tituloSeccion}>{titulo}</h2>
+  </div>
+);
+
+export default function DetalleOrden({
+  orden,
+  onActualizarOrden,
+  onVolver,
+}) {
+  const [diagnostico, setDiagnostico] = useState(
+    orden.diagnostico?.descripcion || ""
+  );
+  const guardarDiagnostico = () => {
+    const descripcionLimpia = diagnostico.trim();
+  
+    if (!descripcionLimpia) {
+      return;
+    }
+  
+    onActualizarOrden(orden.id, {
+      diagnostico: {
+        descripcion: descripcionLimpia,
+        fecha: new Date().toISOString(),
+      },
+      estado: "diagnosticada",
+    });
+  
+    onVolver();
+  };
     return (
       <div style={styles.pagina}>
         <button onClick={onVolver} style={styles.btnVolver}>
@@ -22,7 +63,7 @@ export default function DetalleOrden({ orden, onVolver }) {
   
         <div style={styles.contenido}>
           <section style={styles.tarjeta}>
-            <h2 style={styles.tituloSeccion}>🚗 Vehículo</h2>
+            <TituloSeccion Icono={IconoVehiculo} titulo="Vehículo" />
   
             <div style={styles.datos}>
               <div>
@@ -49,7 +90,7 @@ export default function DetalleOrden({ orden, onVolver }) {
           </section>
   
           <section style={styles.tarjeta}>
-            <h2 style={styles.tituloSeccion}>👤 Cliente</h2>
+          <TituloSeccion Icono={IconoCliente} titulo="Cliente" />
   
             <div style={styles.datosCliente}>
               <div>
@@ -69,26 +110,56 @@ export default function DetalleOrden({ orden, onVolver }) {
           </section>
   
           <section style={styles.tarjetaCompleta}>
-            <h2 style={styles.tituloSeccion}>📝 Motivo de entrada</h2>
+          <TituloSeccion Icono={IconoMotivo} titulo="Motivo de entrada" />
   
             <p style={styles.motivo}>{orden.motivoEntrada}</p>
           </section>
+
+          <section style={styles.tarjetaCompleta}>
+          <TituloSeccion Icono={IconoDiagnostico} titulo="Diagnóstico" />
+
+  <textarea
+    value={diagnostico}
+    onChange={(evento) => setDiagnostico(evento.target.value)}
+    placeholder="Describe el diagnóstico del vehículo..."
+    rows={6}
+    style={styles.campoDiagnostico}
+  />
+
+  <div style={styles.accionesDiagnostico}>
+    <button
+      type="button"
+      onClick={guardarDiagnostico}
+      disabled={!diagnostico.trim()}
+      style={{
+        ...styles.btnGuardar,
+        opacity: diagnostico.trim() ? 1 : 0.5,
+        cursor: diagnostico.trim() ? "pointer" : "not-allowed",
+      }}
+    >
+      Guardar diagnóstico
+    </button>
+  </div>
+</section>
   
           <section style={styles.tarjetaCompleta}>
-            <h2 style={styles.tituloSeccion}>🔧 Progreso de la orden</h2>
+          <TituloSeccion Icono={IconoProgreso} titulo="Progreso de la orden" />
   
             <div style={styles.progreso}>
               <div style={styles.pasoActivo}>1. Recepción</div>
-              <div style={styles.pasoPendiente}>2. Diagnóstico</div>
+              <div
+  style={
+    orden.estado === "diagnosticada"
+      ? styles.pasoActivo
+      : styles.pasoPendiente
+  }
+>
+  2. Diagnóstico
+</div>
               <div style={styles.pasoPendiente}>3. Presupuesto</div>
               <div style={styles.pasoPendiente}>4. Reparación</div>
               <div style={styles.pasoPendiente}>5. Cobro</div>
             </div>
-  
-            <p style={styles.aviso}>
-              En esta primera versión la orden es únicamente de consulta.
-              Añadiremos las acciones de diagnóstico en la siguiente iteración.
-            </p>
           </section>
         </div>
       </div>
@@ -97,40 +168,54 @@ export default function DetalleOrden({ orden, onVolver }) {
   
   const styles = {
     pagina: {
-      minHeight: "calc(100vh - 80px)",
-      maxWidth: 1100,
+      width: "100%",
+      maxWidth: 1180,
+      minHeight: "100hv",
       margin: "0 auto",
+      padding: "34px 20px 56px",
+      boxSizing: "border-box",
     },
   
     btnVolver: {
-      padding: "10px 16px",
-      background: "white",
-      color: "#2563eb",
-      border: "1px solid #cbd5e1",
+      padding: "10px 14px",
+      background: "#ffffff",
+      color: "#6d28d9",
+      border: "1px solid #e4e4e7",
       borderRadius: 10,
       cursor: "pointer",
-      fontWeight: "700",
+      fontWeight: "600",
+      fontSize: 14,
     },
   
     cabecera: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      margin: "48px 0 28px",
+      margin: "54px 0 28px",
+    },
+
+    cabeceraSeccion: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      marginBottom:20,
+      paddingBottom: "1px solid #f0f0f2",
     },
   
     etiqueta: {
-      margin: "0 0 8px",
-      color: "#2563eb",
-      fontSize: 13,
-      fontWeight: "800",
-      letterSpacing: 1,
+      margin: "0 0 10px",
+      color: "#6d28d9",
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 1.2,
     },
   
     titulo: {
       margin: 0,
-      color: "#0f172a",
+      color: "#27272a",
       fontSize: 36,
+      fontWeight: "700",
+      letterSpacing: -1,
     },
   
     fecha: {
@@ -156,28 +241,28 @@ export default function DetalleOrden({ orden, onVolver }) {
     },
   
     tarjeta: {
-      padding: 24,
-      background: "white",
+      padding: 26,
+      background: "#ffffff",
       borderRadius: 18,
-      border: "1px solid #e2e8f0",
-      boxShadow: "0 8px 25px rgba(15, 23, 42, 0.06)",
+      border: "1px solid #e4e4e7",
+      boxShadow: "0 8px 24px rgba(24, 24, 27, 0.045)",
     },
   
     tarjetaCompleta: {
       gridColumn: "1 / -1",
-      padding: 24,
-      background: "white",
+      padding: 26,
+      background: "#ffffff",
       borderRadius: 18,
-      border: "1px solid #e2e8f0",
-      boxShadow: "0 8px 25px rgba(15, 23, 42, 0.06)",
+      border: "1px solid #e4e4e7",
+      boxShadow: "0 8px 24px rgba(24, 24, 27, 0.045)",
     },
   
     tituloSeccion: {
-      margin: "0 0 20px",
-      paddingBottom: 12,
-      borderBottom: "1px solid #e2e8f0",
-      color: "#0f172a",
-      fontSize: 18,
+      margin: 0,
+      color: "#27272a",
+      fontSize: 17,
+      fontWeight: "700",
+      letterSpacing: -0.2,
     },
   
     datos: {
@@ -212,6 +297,35 @@ export default function DetalleOrden({ orden, onVolver }) {
       fontSize: 17,
       lineHeight: 1.6,
     },
+
+    campoDiagnostico: {
+      width: "100%",
+      boxSizing: "border-box",
+      padding: 16,
+      border: "1px solid #cbd5e1",
+      borderRadius: 12,
+      color: "#1e293b",
+      fontSize: 16,
+      fontFamily: "inherit",
+      lineHeight: 1.5,
+      resize: "vertical",
+    },
+    
+    accionesDiagnostico: {
+      display: "flex",
+      justifyContent: "flex-end",
+      marginTop: 16,
+    },
+    
+    btnGuardar: {
+      padding: "12px 18px",
+      background: "#6d28d9",
+      color: "#ffffff",
+      border: "none",
+      borderRadius: 10,
+      fontSize: 15,
+      fontWeight: "700",
+    },
   
     progreso: {
       display: "grid",
@@ -221,11 +335,12 @@ export default function DetalleOrden({ orden, onVolver }) {
   
     pasoActivo: {
       padding: "14px 10px",
-      background: "#2563eb",
-      color: "white",
+      background: "#6d28d9",
+      color: "#ffffff",
       borderRadius: 10,
       textAlign: "center",
       fontWeight: "700",
+      fontSize: 14,
     },
   
     pasoPendiente: {

@@ -1,5 +1,12 @@
 import { useState } from "react";
 
+import {
+  IconoCliente,
+  IconoConfirmacion,
+  IconoMotivo,
+  IconoVehiculo,
+} from "../../components/WorkshopIcons";
+
 export default function Recepcion({
   setPantalla,
   onCrearOrden,
@@ -57,26 +64,6 @@ const [ordenCreada, setOrdenCreada] = useState(null);
       setError("Completa el nombre y el teléfono del cliente.");
       return;
     }
-    const finalizarRecepcion = () => {
-      if (!motivoEntrada.trim()) {
-        setError("Escribe el motivo de entrada del vehículo.");
-        return;
-      }
-    
-      if (typeof onCrearOrden !== "function") {
-        setError("No se ha podido conectar Recepción con las órdenes.");
-        return;
-      }
-    
-      const nuevaOrden = onCrearOrden({
-        vehiculo,
-        cliente,
-        motivoEntrada,
-      });
-    
-      setOrdenCreada(nuevaOrden);
-      setError("");
-    };
   
     setPaso(3);
   };
@@ -106,8 +93,10 @@ const [ordenCreada, setOrdenCreada] = useState(null);
     return (
       <div style={styles.pagina}>
         <div style={styles.contenido}>
-          <div style={styles.icono}>✅</div>
   
+        <div style={styles.icono}>
+  <IconoConfirmacion />
+</div>
           <h1 style={styles.titulo}>
             Orden de Reparación creada
           </h1>
@@ -153,8 +142,9 @@ const [ordenCreada, setOrdenCreada] = useState(null);
         <div style={styles.contenido}>
           <div style={styles.progreso}>Paso 3 de 3</div>
   
-          <div style={styles.icono}>📝</div>
-  
+          <div style={styles.icono}>
+  <IconoMotivo />
+</div>
           <h1 style={styles.titulo}>Motivo de entrada</h1>
   
           <p style={styles.texto}>
@@ -227,8 +217,9 @@ const [ordenCreada, setOrdenCreada] = useState(null);
         <div style={styles.contenido}>
           <div style={styles.progreso}>Paso 2 de 3</div>
   
-          <div style={styles.icono}>👤</div>
-  
+          <div style={styles.icono}>
+  <IconoCliente />
+</div>
           <h1 style={styles.titulo}>Cliente</h1>
   
           <p style={styles.texto}>
@@ -288,8 +279,9 @@ const [ordenCreada, setOrdenCreada] = useState(null);
       <div style={styles.contenido}>
         <div style={styles.progreso}>Paso 1 de 3</div>
 
-        <div style={styles.icono}>🚗</div>
-
+        <div style={styles.icono}>
+  <IconoVehiculo />
+</div>
         <h1 style={styles.titulo}>Vehículo</h1>
 
         <p style={styles.texto}>
@@ -355,51 +347,66 @@ const [ordenCreada, setOrdenCreada] = useState(null);
 
 const styles = {
   pagina: {
-    minHeight: "calc(100vh - 80px)",
+    width: "100%",
+    maxWidth: 1180,
+    minHeight: "100vh",
+    margin: "0 auto",
+    padding: "34px 20px 56px",
+    boxSizing: "border-box"
   },
 
   btnVolver: {
-    padding: "10px 16px",
-    background: "white",
-    color: "#2563eb",
-    border: "1px solid #cbd5e1",
+    padding: "10px 14px",
+    background: "#ffffff",
+    color: "#6d28d9",
+    border: "1px solid #e4e4e7",
     borderRadius: 10,
     cursor: "pointer",
-    fontWeight: "700",
+    fontWeight: "600",
+    fontSize: 14,
   },
 
   contenido: {
     maxWidth: 720,
-    margin: "60px auto 0",
-    padding: 40,
-    background: "white",
-    borderRadius: 24,
-    boxShadow: "0 20px 60px rgba(15, 23, 42, 0.08)",
+    margin: "54px auto 0",
+    padding: 38,
+    background: "#ffffff",
+    border: "1px solid #e4e4e7",
+    borderRadius: 18,
+    boxShadow: "0 8px 24px rgba(24, 24, 27, 0.045)",
   },
 
   progreso: {
-    color: "#2563eb",
+    marginBottom: 18,
+    color: "#6d28d9",
+    fontSize: 12,
     fontWeight: "700",
+    letterSpacing: 1.1,
     textAlign: "center",
-    marginBottom: 20,
+    textTransform: "uppercase"
+    
   },
 
   icono: {
-    fontSize: 48,
-    textAlign: "center",
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: 16,
   },
 
   titulo: {
-    margin: "10px 0 0",
-    color: "#0f172a",
-    fontSize: 36,
+    margin: 0,
+    color: "#27272a",
+    fontSize: 34,
+    fontWeight: "700",
+    letterSpacing: -0.8,
     textAlign: "center",
   },
 
   texto: {
-    margin: "12px auto 28px",
-    color: "#64748b",
-    fontSize: 17,
+    margin: "12px auto 30px",
+    color: "#71717a",
+    fontSize: 16,
+    lineHeight: 1.5,
     textAlign: "center",
   },
 
@@ -419,17 +426,20 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: 8,
-    color: "#334155",
-    fontWeight: "700",
+    color: "#3f3f46",
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   input: {
     width: "100%",
     boxSizing: "border-box",
-    padding: "15px",
-    border: "1px solid #cbd5e1",
-    borderRadius: 12,
-    fontSize: 17,
+    padding: "14px 15px",
+    background: "#ffffff",
+    color: "#27272a",
+    border: "1px solid #d4d4d8",
+    borderRadius: 10,
+    fontSize: 16,
     outline: "none",
   },
 
@@ -443,22 +453,23 @@ const styles = {
   },
 
   btnContinuar: {
-    padding: "16px",
-    background: "#2563eb",
-    color: "white",
+    padding: "14px 18px",
+    background: "#6d28d9",
+    color: "#ffffff",
     border: "none",
-    borderRadius: 12,
+    borderRadius: 10,
     cursor: "pointer",
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "700",
   },
 
   estado: {
     marginTop: 24,
     padding: 14,
-    background: "#eff6ff",
-    color: "#2563eb",
-    borderRadius: 12,
+    background: "#f5f3ff",
+    color: "#6d28d9",
+    border: "1px solid #ddd6fe",
+    borderRadius: 10,
     textAlign: "center",
     fontWeight: "700",
   },

@@ -29,7 +29,6 @@ export function crearOrdenReparacion({
         descripcion: "",
         fecha: null,
       },
-      motivoEntrada: motivoEntrada.trim(),
 
 diagnostico: {
   descripcion: "",

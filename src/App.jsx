@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Home from "./Pages/home";
 import CobroRapido from "./modules/tpv/ModuloCobro";
 import Recepcion from "./Modules/recepcion/ModuloRecepcion";
@@ -7,13 +7,29 @@ import { crearOrdenReparacion } from "./models/ordenReparacion";
 
 export default function App() {
   const [pantalla, setPantalla] = useState("home");
-  const [ordenesReparacion, setOrdenesReparacion] = useState([]);
+  const [ordenesReparacion, setOrdenesReparacion] = useState(() => {
+    const ordenesGuardadas = localStorage.getItem(
+      "yanlai-ordenes-reparacion"
+    );
+  
+    return ordenesGuardadas
+      ? JSON.parse(ordenesGuardadas)
+      : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "yanlai-ordenes-reparacion",
+      JSON.stringify(ordenesReparacion)
+    );
+  }, [ordenesReparacion]);
+  
   const registrarOrdenReparacion = (datosRecepcion) => {
     const nuevaOrden = crearOrdenReparacion({
       numero: ordenesReparacion.length + 1,
       ...datosRecepcion,
     });
-  
+
     setOrdenesReparacion((ordenesActuales) => [
       ...ordenesActuales,
       nuevaOrden,

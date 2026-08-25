@@ -4,6 +4,7 @@ import DetalleOrden from "./DetalleOrden";
 export default function Gestion({
   setPantalla,
   ordenesReparacion = [],
+  onActualizarOrden,
 }) {
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
 
@@ -11,6 +12,7 @@ export default function Gestion({
     return (
       <DetalleOrden
         orden={ordenSeleccionada}
+        onActualizarOrden={onActualizarOrden}
         onVolver={() => setOrdenSeleccionada(null)}
       />
     );
@@ -78,9 +80,17 @@ export default function Gestion({
                   </div>
                 </div>
 
-                <div style={styles.estado}>
-                  {orden.estado}
-                </div>
+                <div
+  style={{
+    ...styles.estado,
+    background:
+      orden.estado === "diagnosticada" ? "#dcfce7" : "#f5f3ff",
+    color:
+      orden.estado === "diagnosticada" ? "#15803d" : "#6d28d9",
+  }}
+>
+  {orden.estado}
+</div>
               </div>
 
               <div style={styles.datos}>
@@ -129,37 +139,43 @@ export default function Gestion({
 
 const styles = {
   pagina: {
-    minHeight: "calc(100vh - 80px)",
-    maxWidth: 1100,
+    width: "100%",
+    maxWidth: 1180,
+    minHeight: "100vh",
     margin: "0 auto",
+    padding: "34px 20px 56px",
+    boxSizing: "border-box",
   },
 
   btnVolver: {
-    padding: "10px 16px",
-    background: "white",
-    color: "#2563eb",
-    border: "1px solid #cbd5e1",
+    padding: "10px 14px",
+    background: "#ffffff",
+    color: "#6d28d9",
+    border: "1px solid #e4e4e7",
     borderRadius: 10,
     cursor: "pointer",
-    fontWeight: "700",
+    fontWeight: "600",
+    fontSize: 14,
   },
 
   cabecera: {
-    margin: "48px 0 28px",
+    margin: "54px 0 28px",
   },
 
   etiqueta: {
-    margin: "0 0 8px",
-    color: "#2563eb",
-    fontSize: 13,
-    fontWeight: "800",
-    letterSpacing: 1,
+    margin: "0 0 10px",
+    color: "#6d28d9",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.2,
   },
 
   titulo: {
     margin: 0,
-    color: "#0f172a",
+    color: "#27272a",
     fontSize: 36,
+    fontWeight: "700",
+    letterSpacing: -1,
   },
 
   subtitulo: {
@@ -209,10 +225,10 @@ const styles = {
 
   orden: {
     padding: 24,
-    background: "white",
+    background: "#ffffff",
     borderRadius: 18,
-    boxShadow: "0 8px 25px rgba(15, 23, 42, 0.06)",
-    border: "1px solid #e2e8f0",
+    boxShadow: "0 8px 24px rgba(24, 24, 27, 0.045)",
+    border: "1px solid #e4e4e7",
   },
 
   ordenCabecera: {
@@ -224,9 +240,10 @@ const styles = {
   },
 
   numeroOrden: {
-    color: "#0f172a",
-    fontSize: 20,
-    fontWeight: "800",
+    color: "#27272a",
+    fontSize: 19,
+    fontWeight: "700",
+    letterSpacing: -0.3,
   },
 
   fecha: {
@@ -236,12 +253,10 @@ const styles = {
   },
 
   estado: {
-    padding: "8px 12px",
-    background: "#dcfce7",
-    color: "#15803d",
+    padding: "7px 11px",
     borderRadius: 999,
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 12,
+    fontWeight: "700",
     textTransform: "capitalize",
   },
 
@@ -275,10 +290,10 @@ const styles = {
   btnAbrir: {
     display: "block",
     margin: "20px 0 0 auto",
-    padding: "11px 18px",
-    background: "#2563eb",
-    color: "white",
-    border: "none",
+    padding: "10px 15px",
+    background: "#f5f3ff",
+    color: "#6d28d9",
+    border: "1px solid #ddd6fe",
     borderRadius: 10,
     cursor: "pointer",
     fontWeight: "700",
