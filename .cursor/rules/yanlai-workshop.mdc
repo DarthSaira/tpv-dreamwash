@@ -1,0 +1,85 @@
+---
+description: Permanent product, UX, and development guidance for the Yanlai Workshop MVP.
+alwaysApply: true
+---
+
+# Yanlai Workshop
+
+Yanlai Workshop is a SaaS product by Yanlai for small independent automotive workshops.
+
+We are currently building an MVP. Prioritize a functional, simple and maintainable product over unnecessary complexity.
+
+## Product structure
+
+Yanlai Workshop has three main interfaces that share the same underlying data:
+
+1. Reception — primarily used on a tablet.
+   Purpose: receive a vehicle quickly and create a Repair Order.
+
+2. Payments / POS — primarily used on a tablet.
+   Purpose: quickly charge services or completed Repair Orders and eventually print tickets.
+
+3. Management — primarily used on desktop/web.
+   Purpose: manage workshop operations, including Repair Orders, diagnosis, budgets/estimates, repairs, customers, vehicles and later invoicing and stock.
+
+## Core entity
+
+The Repair Order (OR / Orden de Reparación) is the central operational entity.
+
+Main intended workflow:
+
+Vehicle arrives
+→ Reception
+→ Repair Order created
+→ Diagnosis
+→ Budget / Estimate
+→ Repair
+→ Payment
+→ Ticket or Invoice
+→ Repair Order closed
+
+Do not break this workflow without explicit instruction.
+
+## UX principles
+
+- Reduce clicks and unnecessary steps.
+- Interfaces must be clear for workshop employees who are not technical users.
+- Reception and Payments are task-focused tablet interfaces, not reduced copies of the management interface.
+- Management can contain more detailed information and administrative actions.
+- Preserve the existing Yanlai Workshop visual language unless explicitly asked to redesign something.
+- Do not make unrelated visual changes when implementing functionality.
+
+## Development rules
+
+- Work incrementally. Prefer small, controlled changes.
+- Do not rewrite large parts of the application unless explicitly requested.
+- Do not introduce new frameworks, libraries or architectural patterns unless they are genuinely necessary.
+- Before changing existing architecture, inspect and understand the current implementation.
+- Reuse existing components, styles, data structures and patterns when appropriate.
+- Do not modify unrelated files or features.
+- Do not delete existing functionality unless explicitly instructed.
+- Keep the MVP scope in mind and avoid overengineering.
+- When requirements are ambiguous and the decision could materially affect product behavior or architecture, ask before implementing.
+- Fix the root cause of errors rather than hiding them.
+- Keep code readable and maintainable.
+
+## Validation
+
+After implementing a requested change:
+
+- Check for obvious errors.
+- Run the relevant available validation/build commands when appropriate.
+- Explain briefly what was changed.
+- State which files were modified.
+- Mention any important limitation or unresolved issue.
+- Never claim something works if it has not actually been verified.
+
+## Collaboration
+
+The product owner is not a programmer.
+
+When explaining technical matters:
+- use clear language;
+- avoid unnecessary jargon;
+- explain what the result means for the product;
+- do not require the product owner to manually edit code unless specifically requested.
