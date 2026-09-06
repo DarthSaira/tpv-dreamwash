@@ -1,8 +1,38 @@
 import { useState } from "react";
-import Sidebar from "../../components/sidebar";
-import ServicioPersonalizado from "../../components/serviciopersonalizado";
-import ModalCobro from "../../components/modalcobro";
-import Ticket from "../../components/ticket";
+import Sidebar from "../../components/Sidebar";
+import ServicioPersonalizado from "../../components/ServicioPersonalizado";
+import ModalCobro from "../../components/ModalCobro";
+import Ticket from "../../components/Ticket";
+import { ESTADOS_OR } from "../../models/ordenreparacion";
+
+const formatearEuros = (valor) => {
+  if (!Number.isFinite(Number(valor))) {
+    return "—";
+  }
+
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+  }).format(Number(valor));
+};
+
+const presupuestoCobroEsValido = (orden) => {
+  const presupuesto = orden?.presupuesto;
+
+  if (!presupuesto || typeof presupuesto !== "object") {
+    return false;
+  }
+
+  if (!Array.isArray(presupuesto.conceptos) || presupuesto.conceptos.length === 0) {
+    return false;
+  }
+
+  return (
+    Number.isFinite(Number(presupuesto.subtotal)) &&
+    Number.isFinite(Number(presupuesto.iva)) &&
+    Number.isFinite(Number(presupuesto.total))
+  );
+};
 
 const dataInicial = [
   {
@@ -23,7 +53,11 @@ const dataInicial = [
   },
 ];
 
-export default function CobroRapido({ pantalla, setPantalla }) {
+export default function CobroRapido({
+  pantalla,
+  setPantalla,
+  ordenesReparacion = [],
+}) {
   const [categorias] = useState(dataInicial);
   const [seleccionados, setSeleccionados] = useState([]);
 
@@ -53,6 +87,8 @@ export default function CobroRapido({ pantalla, setPantalla }) {
   // Estados para controlar el modal de éxito/cambio al cobrar
   const [modalExito, setModalExito] = useState(false);
   const [cambioFinalModal, setCambioFinalModal] = useState(0);
+  const [modoCobro, setModoCobro] = useState("venta_rapida");
+  const [idOrdenSeleccionada, setIdOrdenSeleccionada] = useState(null);
 
   const agregarServicio = (servicio) => {
     const existe = seleccionados.find((s) => s.id === servicio.id);
@@ -161,6 +197,22 @@ export default function CobroRapido({ pantalla, setPantalla }) {
     limpiarTicket();
   };
 
+  const ordenesListasParaCobro = ordenesReparacion.filter(
+    (orden) => orden?.estado === ESTADOS_OR.LISTA_PARA_COBRO
+  );
+  const ordenSeleccionada =
+    ordenesListasParaCobro.find((orden) => orden.id === idOrdenSeleccionada) ||
+    null;
+  const presupuestoSeleccionado = ordenSeleccionada?.presupuesto;
+  const presupuestoSeleccionadoValido = presupuestoCobroEsValido(ordenSeleccionada);
+
+  const cambiarModoCobro = (modo) => {
+    setModoCobro(modo);
+    if (modo === "venta_rapida") {
+      setIdOrdenSeleccionada(null);
+    }
+  };
+
   return (
     <div>
       <style>{`
@@ -173,8 +225,7 @@ export default function CobroRapido({ pantalla, setPantalla }) {
         }
       `}</style>
 
-      {/* MODAL EMERGENTE DE COBRO EXCELENTE PARA TABLETS */}
-      {modalExito && (
+      {modoCobro === "venta_rapida" && modalExito && (
         <ModalCobro
           styles={styles}
           metodoPago={metodoPago}
@@ -183,6 +234,33 @@ export default function CobroRapido({ pantalla, setPantalla }) {
         />
       )}
 
+      <div style={styles.selectorModoCobro} className="no-imprimir">
+        <button
+          type="button"
+          onClick={() => cambiarModoCobro("venta_rapida")}
+          style={{
+            ...styles.btnModoCobro,
+            background: modoCobro === "venta_rapida" ? "#10b981" : "#e2e8f0",
+            color: modoCobro === "venta_rapida" ? "white" : "#334155",
+          }}
+        >
+          Venta rápida
+        </button>
+        <button
+          type="button"
+          onClick={() => cambiarModoCobro("ordenes")}
+          style={{
+            ...styles.btnModoCobro,
+            background: modoCobro === "ordenes" ? "#10b981" : "#e2e8f0",
+            color: modoCobro === "ordenes" ? "white" : "#334155",
+          }}
+        >
+          Órdenes de reparación
+        </button>
+      </div>
+
+      {modoCobro === "venta_rapida" ? (
+      <>
       <div
         style={{
           display: "flex",
@@ -394,6 +472,144 @@ export default function CobroRapido({ pantalla, setPantalla }) {
           </div>
         )}
       </div>
+      </>
+      ) : (
+      <div
+        style={{
+          display: "flex",
+          gap: 20,
+          alignItems: "flex-start",
+        }}
+      >
+        <Sidebar
+          pantalla={pantalla}
+          setPantalla={setPantalla}
+        />
+
+        <div style={{ flex: 1 }}>
+          {ordenSeleccionada ? (
+            <div style={styles.card}>
+              <button
+                type="button"
+                onClick={() => setIdOrdenSeleccionada(null)}
+                style={styles.btnVolverFlujo}
+              >
+                ← Volver a las órdenes
+              </button>
+
+              <h2 style={{ ...styles.tituloSeccion, marginTop: 18 }}>
+                {ordenSeleccionada.id || "Orden sin identificador"}
+              </h2>
+
+              <p style={{ color: "#475569", marginTop: 0 }}>
+                {ordenSeleccionada.vehiculo?.matricula || "Sin matrícula"}
+                {" · "}
+                {ordenSeleccionada.cliente?.nombre || "Cliente no indicado"}
+              </p>
+
+              {!presupuestoSeleccionadoValido ? (
+                <p style={styles.avisoDatosIncompletos}>
+                  Esta orden no tiene un presupuesto completo para cobrar.
+                </p>
+              ) : (
+                <>
+                  <table style={styles.tablaOrdenCobro}>
+                    <thead>
+                      <tr>
+                        <th style={styles.thOrdenCobro}>Concepto</th>
+                        <th style={styles.thOrdenCobroNumero}>Cantidad</th>
+                        <th style={styles.thOrdenCobroNumero}>Precio unitario</th>
+                        <th style={styles.thOrdenCobroNumero}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {presupuestoSeleccionado.conceptos.map((concepto, indice) => (
+                        <tr key={concepto.id || indice}>
+                          <td style={styles.tdOrdenCobro}>
+                            {concepto.descripcion || "Sin descripción"}
+                          </td>
+                          <td style={styles.tdOrdenCobroNumero}>
+                            {concepto.cantidad}
+                          </td>
+                          <td style={styles.tdOrdenCobroNumero}>
+                            {formatearEuros(concepto.precioUnitario)}
+                          </td>
+                          <td style={styles.tdOrdenCobroNumero}>
+                            {formatearEuros(concepto.total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div style={styles.totalesOrdenCobro}>
+                    <div style={styles.filaTotalOrden}>
+                      <span>Subtotal</span>
+                      <strong>{formatearEuros(presupuestoSeleccionado.subtotal)}</strong>
+                    </div>
+                    <div style={styles.filaTotalOrden}>
+                      <span>
+                        IVA ({presupuestoSeleccionado.porcentajeIva ?? "—"} %)
+                      </span>
+                      <strong>{formatearEuros(presupuestoSeleccionado.iva)}</strong>
+                    </div>
+                    <div style={styles.filaTotalOrdenFinal}>
+                      <span>Total</span>
+                      <strong>{formatearEuros(presupuestoSeleccionado.total)}</strong>
+                    </div>
+                  </div>
+
+                  <p style={styles.avisoCobroPosterior}>
+                    El cobro de esta orden se incorporará en el siguiente paso.
+                  </p>
+                </>
+              )}
+            </div>
+          ) : ordenesListasParaCobro.length === 0 ? (
+            <div style={styles.card}>
+              <h2 style={styles.tituloSeccion}>Órdenes de reparación</h2>
+              <p style={{ color: "#9ca3af", fontStyle: "italic", fontSize: 14 }}>
+                No hay órdenes listas para cobrar.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <h2 style={{ ...styles.tituloSeccion, marginBottom: 16 }}>
+                Órdenes listas para cobrar
+              </h2>
+              {ordenesListasParaCobro.map((orden) => (
+                <article key={orden.id} style={styles.card}>
+                  <div style={styles.filaOrdenLista}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#1e293b" }}>
+                        {orden.id || "Orden sin identificador"}
+                      </div>
+                      <div style={{ color: "#475569", marginTop: 6 }}>
+                        {orden.vehiculo?.matricula || "Sin matrícula"}
+                        {" · "}
+                        {orden.cliente?.nombre || "Cliente no indicado"}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontWeight: 800, color: "#1e293b" }}>
+                        {formatearEuros(orden.presupuesto?.total)}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIdOrdenSeleccionada(orden.id)}
+                        style={styles.btnSeleccionarOrden}
+                      >
+                        Ver orden
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      )}
     </div>
   );
 }
@@ -428,4 +644,18 @@ const styles = {
   modalCambioBox: { background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "15px", borderRadius: "12px", marginBottom: "25px" },
   btnCerrarModal: { width: "100%", padding: "14px", background: "#1e293b", color: "white", border: "none", borderRadius: "10px", fontWeight: "700", fontSize: "15px", cursor: "pointer" },
   btnVolverInicio: { padding: "10px 16px", background: "white", color: "#2563eb", border: "1px solid #cbd5e1", borderRadius: 10, cursor: "pointer", fontWeight: "700", },
+  selectorModoCobro: { display: "flex", gap: 10, marginBottom: 20 },
+  btnModoCobro: { padding: "12px 18px", border: "none", borderRadius: 10, cursor: "pointer", fontWeight: "700", fontSize: 14 },
+  filaOrdenLista: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 },
+  btnSeleccionarOrden: { marginTop: 10, padding: "8px 14px", background: "#10b981", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: "700", fontSize: 13 },
+  tablaOrdenCobro: { width: "100%", borderCollapse: "collapse", fontSize: 14, marginTop: 10 },
+  thOrdenCobro: { padding: "8px 6px", textAlign: "left", color: "#6b7280", borderBottom: "1px solid #e5e7eb" },
+  thOrdenCobroNumero: { padding: "8px 6px", textAlign: "right", color: "#6b7280", borderBottom: "1px solid #e5e7eb" },
+  tdOrdenCobro: { padding: "10px 6px", color: "#1e293b", borderBottom: "1px solid #f1f5f9" },
+  tdOrdenCobroNumero: { padding: "10px 6px", textAlign: "right", color: "#1e293b", borderBottom: "1px solid #f1f5f9" },
+  totalesOrdenCobro: { marginTop: 18, maxWidth: 320, marginLeft: "auto", display: "flex", flexDirection: "column", gap: 8 },
+  filaTotalOrden: { display: "flex", justifyContent: "space-between", color: "#475569", fontSize: 14 },
+  filaTotalOrdenFinal: { display: "flex", justifyContent: "space-between", color: "#0f172a", fontSize: 18, fontWeight: "700", paddingTop: 8, borderTop: "1px solid #e2e8f0" },
+  avisoCobroPosterior: { margin: "20px 0 0", color: "#64748b", fontSize: 13 },
+  avisoDatosIncompletos: { margin: "16px 0 0", padding: 12, background: "#fef2f2", color: "#dc2626", borderRadius: 10, fontWeight: "600", fontSize: 14 },
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Home from "./Pages/home";
-import CobroRapido from "./modules/tpv/ModuloCobro";
+import CobroRapido from "./Modules/tpv/ModuloCobro";
 import Recepcion from "./Modules/recepcion/ModuloRecepcion";
 import Gestion from "./Modules/gestion/ModuloGestion";
 import { crearOrdenReparacion } from "./models/ordenreparacion";
@@ -103,6 +103,7 @@ export default function App() {
                     <CobroRapido
                       pantalla={pantalla}
                       setPantalla={setPantalla}
+                      ordenesReparacion={ordenesReparacion}
                     />
                          </div>
            ) : pantalla === "recepcion" ? (
