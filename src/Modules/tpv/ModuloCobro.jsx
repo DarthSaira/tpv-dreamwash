@@ -3,7 +3,7 @@ import Sidebar from "../../components/Sidebar";
 import ServicioPersonalizado from "../../components/ServicioPersonalizado";
 import ModalCobro from "../../components/ModalCobro";
 import Ticket from "../../components/Ticket";
-import { ESTADOS_OR } from "../../models/ordenreparacion";
+import { esListaParaFacturar } from "../../models/ordenreparacion";
 
 const formatearEuros = (valor) => {
   if (!Number.isFinite(Number(valor))) {
@@ -197,11 +197,11 @@ export default function CobroRapido({
     limpiarTicket();
   };
 
-  const ordenesListasParaCobro = ordenesReparacion.filter(
-    (orden) => orden?.estado === ESTADOS_OR.LISTA_PARA_COBRO
+  const ordenesListasParaFacturar = ordenesReparacion.filter((orden) =>
+    esListaParaFacturar(orden?.estado)
   );
   const ordenSeleccionada =
-    ordenesListasParaCobro.find((orden) => orden.id === idOrdenSeleccionada) ||
+    ordenesListasParaFacturar.find((orden) => orden.id === idOrdenSeleccionada) ||
     null;
   const presupuestoSeleccionado = ordenSeleccionada?.presupuesto;
   const presupuestoSeleccionadoValido = presupuestoCobroEsValido(ordenSeleccionada);
@@ -509,7 +509,7 @@ export default function CobroRapido({
 
               {!presupuestoSeleccionadoValido ? (
                 <p style={styles.avisoDatosIncompletos}>
-                  Esta orden no tiene un presupuesto completo para cobrar.
+                  Esta orden no tiene un presupuesto completo para facturar.
                 </p>
               ) : (
                 <>
@@ -560,24 +560,24 @@ export default function CobroRapido({
                   </div>
 
                   <p style={styles.avisoCobroPosterior}>
-                    El cobro de esta orden se incorporará en el siguiente paso.
+                    Registra la factura para continuar con el cobro.
                   </p>
                 </>
               )}
             </div>
-          ) : ordenesListasParaCobro.length === 0 ? (
+          ) : ordenesListasParaFacturar.length === 0 ? (
             <div style={styles.card}>
               <h2 style={styles.tituloSeccion}>Órdenes de reparación</h2>
               <p style={{ color: "#9ca3af", fontStyle: "italic", fontSize: 14 }}>
-                No hay órdenes listas para cobrar.
+                No hay órdenes listas para facturar.
               </p>
             </div>
           ) : (
             <div>
               <h2 style={{ ...styles.tituloSeccion, marginBottom: 16 }}>
-                Órdenes listas para cobrar
+                Órdenes listas para facturar
               </h2>
-              {ordenesListasParaCobro.map((orden) => (
+              {ordenesListasParaFacturar.map((orden) => (
                 <article key={orden.id} style={styles.card}>
                   <div style={styles.filaOrdenLista}>
                     <div>

@@ -11,6 +11,7 @@ import {
 import {
   ESTADOS_OR,
   ESTADOS_PRESUPUESTO,
+  esListaParaFacturar,
   obtenerColoresEstadoOr,
   obtenerEstadoAlGuardarDiagnostico,
   obtenerEtiquetaEstadoOr,
@@ -261,13 +262,13 @@ export default function DetalleOrden({
     setMensajePresupuesto("");
   };
 
-  const marcarListoParaCobrar = () => {
+  const marcarListoParaFacturar = () => {
     if (orden.estado !== ESTADOS_OR.PRESUPUESTO_APROBADO) {
       return;
     }
 
     const confirmado = window.confirm(
-      "¿Confirmas que la reparación ha terminado y la orden está lista para cobrar?"
+      "¿Confirmas que la reparación ha terminado y la orden está lista para facturar?"
     );
 
     if (!confirmado) {
@@ -275,7 +276,7 @@ export default function DetalleOrden({
     }
 
     onActualizarOrden(orden.id, {
-      estado: ESTADOS_OR.LISTA_PARA_COBRO,
+      estado: ESTADOS_OR.LISTA_PARA_FACTURAR,
       reparacion: {
         ...(orden.reparacion || {}),
         fechaFinalizacion: new Date().toISOString(),
@@ -647,17 +648,17 @@ export default function DetalleOrden({
     <div style={styles.accionesListoCobro}>
       <button
         type="button"
-        onClick={marcarListoParaCobrar}
+        onClick={marcarListoParaFacturar}
         style={styles.btnListoCobro}
       >
-        Marcar como listo para cobrar
+        Marcar como listo para facturar
       </button>
     </div>
   )}
 
-  {orden.estado === ESTADOS_OR.LISTA_PARA_COBRO && (
+  {esListaParaFacturar(orden.estado) && (
     <div style={styles.avisoListoCobro}>
-      <strong>Reparación terminada · Lista para cobro</strong>
+      <strong>Reparación terminada · Lista para facturar</strong>
       {orden.reparacion?.fechaFinalizacion && (
         <span>
           {new Date(orden.reparacion.fechaFinalizacion).toLocaleString("es-ES")}

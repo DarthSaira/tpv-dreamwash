@@ -11,6 +11,7 @@ export const ESTADOS_OR = {
   PRESUPUESTO_APROBADO: "presupuesto_aprobado",
   PRESUPUESTO_RECHAZADO: "presupuesto_rechazado",
   EN_REPARACION: "en_reparacion",
+  LISTA_PARA_FACTURAR: "lista_para_facturar",
   LISTA_PARA_COBRO: "lista_para_cobro",
   CERRADA: "cerrada",
 };
@@ -22,7 +23,8 @@ const ETIQUETAS_ESTADO_OR = {
   [ESTADOS_OR.PRESUPUESTO_APROBADO]: "Presupuesto aprobado",
   [ESTADOS_OR.PRESUPUESTO_RECHAZADO]: "Presupuesto rechazado",
   [ESTADOS_OR.EN_REPARACION]: "En reparación",
-  [ESTADOS_OR.LISTA_PARA_COBRO]: "Lista para cobro",
+  [ESTADOS_OR.LISTA_PARA_FACTURAR]: "Lista para facturar",
+  [ESTADOS_OR.LISTA_PARA_COBRO]: "Lista para facturar",
   [ESTADOS_OR.CERRADA]: "Cerrada",
 };
 
@@ -34,6 +36,7 @@ const ESTADOS_DIAGNOSTICO_ACTIVO = new Set([
   ESTADOS_OR.PRESUPUESTO_APROBADO,
   ESTADOS_OR.PRESUPUESTO_RECHAZADO,
   ESTADOS_OR.EN_REPARACION,
+  ESTADOS_OR.LISTA_PARA_FACTURAR,
   ESTADOS_OR.LISTA_PARA_COBRO,
   ESTADOS_OR.CERRADA,
 ]);
@@ -43,15 +46,24 @@ const ESTADOS_PRESUPUESTO_ACTIVO = new Set([
   ESTADOS_OR.PRESUPUESTO_APROBADO,
   ESTADOS_OR.PRESUPUESTO_RECHAZADO,
   ESTADOS_OR.EN_REPARACION,
+  ESTADOS_OR.LISTA_PARA_FACTURAR,
   ESTADOS_OR.LISTA_PARA_COBRO,
   ESTADOS_OR.CERRADA,
 ]);
 
 const ESTADOS_REPARACION_ACTIVA = new Set([
   ESTADOS_OR.EN_REPARACION,
+  ESTADOS_OR.LISTA_PARA_FACTURAR,
   ESTADOS_OR.LISTA_PARA_COBRO,
   ESTADOS_OR.CERRADA,
 ]);
+
+export function esListaParaFacturar(estado) {
+  return (
+    estado === ESTADOS_OR.LISTA_PARA_FACTURAR ||
+    estado === ESTADOS_OR.LISTA_PARA_COBRO
+  );
+}
 
 export function obtenerEtiquetaEstadoOr(estado) {
   return ETIQUETAS_ESTADO_OR[estado] || "Estado desconocido";
