@@ -132,5 +132,9 @@ export function crearOrdenReparacion({
         fechaAprobacion: null,
         fechaRechazo: null,
       },
+
+      reparacion: {
+        fechaFinalizacion: null,
+      },
     };
   }

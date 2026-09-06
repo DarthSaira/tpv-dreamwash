@@ -260,6 +260,29 @@ export default function DetalleOrden({
     setErrorPresupuesto("");
     setMensajePresupuesto("");
   };
+
+  const marcarListoParaCobrar = () => {
+    if (orden.estado !== ESTADOS_OR.PRESUPUESTO_APROBADO) {
+      return;
+    }
+
+    const confirmado = window.confirm(
+      "¿Confirmas que la reparación ha terminado y la orden está lista para cobrar?"
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    onActualizarOrden(orden.id, {
+      estado: ESTADOS_OR.LISTA_PARA_COBRO,
+      reparacion: {
+        ...(orden.reparacion || {}),
+        fechaFinalizacion: new Date().toISOString(),
+      },
+    });
+  };
+
   const guardarDiagnostico = () => {
     const descripcionLimpia = diagnostico.trim();
   
@@ -619,6 +642,29 @@ export default function DetalleOrden({
   {mensajePresupuesto && (
     <p style={styles.confirmacionPresupuesto}>{mensajePresupuesto}</p>
   )}
+
+  {orden.estado === ESTADOS_OR.PRESUPUESTO_APROBADO && (
+    <div style={styles.accionesListoCobro}>
+      <button
+        type="button"
+        onClick={marcarListoParaCobrar}
+        style={styles.btnListoCobro}
+      >
+        Marcar como listo para cobrar
+      </button>
+    </div>
+  )}
+
+  {orden.estado === ESTADOS_OR.LISTA_PARA_COBRO && (
+    <div style={styles.avisoListoCobro}>
+      <strong>Reparación terminada · Lista para cobro</strong>
+      {orden.reparacion?.fechaFinalizacion && (
+        <span>
+          {new Date(orden.reparacion.fechaFinalizacion).toLocaleString("es-ES")}
+        </span>
+      )}
+    </div>
+  )}
 </section>
           <section style={styles.tarjetaCompleta}>
           <TituloSeccion Icono={IconoProgreso} titulo="Progreso de la orden" />
@@ -933,6 +979,37 @@ export default function DetalleOrden({
       fontWeight: "700",
       fontSize: 14,
       textAlign: "right",
+    },
+
+    accionesListoCobro: {
+      display: "flex",
+      justifyContent: "flex-end",
+      marginTop: 16,
+    },
+
+    btnListoCobro: {
+      padding: "12px 18px",
+      background: "#6d28d9",
+      color: "#ffffff",
+      border: "none",
+      borderRadius: 10,
+      fontSize: 15,
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+
+    avisoListoCobro: {
+      margin: "16px 0 0",
+      padding: 12,
+      background: "#f5f3ff",
+      color: "#6d28d9",
+      borderRadius: 10,
+      fontWeight: "700",
+      fontSize: 14,
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap",
     },
 
     pagina: {
