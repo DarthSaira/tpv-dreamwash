@@ -9,6 +9,19 @@ import {
   IconoVehiculo,
 } from "../../components/WorkshopIcons";
 
+const IVA_POR_DEFECTO = 21;
+
+const parsearNumero = (valor) =>
+  Number(String(valor).replace(",", "."));
+
+const redondearImporte = (valor) => Number(Number(valor).toFixed(2));
+
+const formatearEuros = (valor) =>
+  new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+  }).format(valor);
+
 const TituloSeccion = ({ Icono, titulo }) => (
   <div style={styles.cabeceraSeccion}>
     <Icono />
@@ -24,54 +37,133 @@ export default function DetalleOrden({
   const [diagnostico, setDiagnostico] = useState(
     orden.diagnostico?.descripcion || ""
   );
-  const [, setConceptosPresupuesto] = useState(
+  const [conceptosPresupuesto, setConceptosPresupuesto] = useState(
     orden.presupuesto?.conceptos || []
   );
-  
+  const [porcentajeIvaTexto, setPorcentajeIvaTexto] = useState(
+    orden.presupuesto?.porcentajeIva == null
+      ? String(IVA_POR_DEFECTO)
+      : String(orden.presupuesto.porcentajeIva)
+  );
+  const [fechaCreacionPresupuesto, setFechaCreacionPresupuesto] = useState(
+    orden.presupuesto?.fechaCreacion || null
+  );
+  const [errorPresupuesto, setErrorPresupuesto] = useState("");
+  const [mensajePresupuesto, setMensajePresupuesto] = useState("");
+
   const [nuevoConcepto, setNuevoConcepto] = useState({
     descripcion: "",
     cantidad: 1,
     precioUnitario: "",
   });
+
+  const textoIva = String(porcentajeIvaTexto).trim();
+  const porcentajeIva = parsearNumero(textoIva);
+  const ivaEsValido =
+    textoIva !== "" &&
+    Number.isFinite(porcentajeIva) &&
+    porcentajeIva >= 0 &&
+    porcentajeIva <= 100;
+
+  const subtotal = redondearImporte(
+    conceptosPresupuesto.reduce(
+      (acumulado, concepto) => acumulado + Number(concepto.total || 0),
+      0
+    )
+  );
+  const importeIva = ivaEsValido
+    ? redondearImporte((subtotal * porcentajeIva) / 100)
+    : 0;
+  const totalPresupuesto = ivaEsValido
+    ? redondearImporte(subtotal + importeIva)
+    : subtotal;
+
+  const puedeGuardarPresupuesto =
+    conceptosPresupuesto.length > 0 && ivaEsValido;
+
   const agregarConcepto = () => {
     const descripcion = nuevoConcepto.descripcion.trim();
-  
-    const cantidad = Number(
-      String(nuevoConcepto.cantidad).replace(",", ".")
-    );
-  
-    const precioUnitario = Number(
-      String(nuevoConcepto.precioUnitario).replace(",", ".")
-    );
-  
-    if (
-      !descripcion ||
-      !Number.isFinite(cantidad) ||
-      cantidad <= 0 ||
-      !Number.isFinite(precioUnitario) ||
-      precioUnitario < 0
-    ) {
+
+    const cantidad = parsearNumero(nuevoConcepto.cantidad);
+    const precioUnitario = parsearNumero(nuevoConcepto.precioUnitario);
+
+    if (!descripcion) {
+      setErrorPresupuesto("Escribe la descripción del concepto.");
+      setMensajePresupuesto("");
       return;
     }
-  
+
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      setErrorPresupuesto("La cantidad debe ser un número mayor que 0.");
+      setMensajePresupuesto("");
+      return;
+    }
+
+    if (!Number.isFinite(precioUnitario) || precioUnitario < 0) {
+      setErrorPresupuesto(
+        "El precio unitario debe ser un número igual o mayor que 0."
+      );
+      setMensajePresupuesto("");
+      return;
+    }
+
+    const precioUnitarioRedondeado = redondearImporte(precioUnitario);
+
     const concepto = {
       id: Date.now(),
       descripcion,
       cantidad,
-      precioUnitario,
-      total: Number((cantidad * precioUnitario).toFixed(2)),
+      precioUnitario: precioUnitarioRedondeado,
+      total: redondearImporte(cantidad * precioUnitarioRedondeado),
     };
-  
+
     setConceptosPresupuesto((conceptosActuales) => [
       ...conceptosActuales,
       concepto,
     ]);
-  
+
     setNuevoConcepto({
       descripcion: "",
       cantidad: 1,
       precioUnitario: "",
     });
+    setErrorPresupuesto("");
+    setMensajePresupuesto("");
+  };
+
+  const eliminarConcepto = (idConcepto) => {
+    setConceptosPresupuesto((conceptosActuales) =>
+      conceptosActuales.filter((concepto) => concepto.id !== idConcepto)
+    );
+    setErrorPresupuesto("");
+    setMensajePresupuesto("");
+  };
+
+  const guardarPresupuesto = () => {
+    if (!puedeGuardarPresupuesto) {
+      return;
+    }
+
+    const fechaCreacion =
+      fechaCreacionPresupuesto || new Date().toISOString();
+
+    onActualizarOrden(orden.id, {
+      presupuesto: {
+        ...(orden.presupuesto || {}),
+        conceptos: conceptosPresupuesto,
+        subtotal,
+        porcentajeIva,
+        iva: importeIva,
+        total: totalPresupuesto,
+        estado: orden.presupuesto?.estado || "pendiente",
+        fechaCreacion,
+        fechaAprobacion: orden.presupuesto?.fechaAprobacion ?? null,
+      },
+    });
+
+    setFechaCreacionPresupuesto(fechaCreacion);
+    setErrorPresupuesto("");
+    setMensajePresupuesto("Presupuesto guardado");
   };
   const guardarDiagnostico = () => {
     const descripcionLimpia = diagnostico.trim();
@@ -255,6 +347,114 @@ export default function DetalleOrden({
       Añadir concepto
     </button>
   </div>
+
+  {errorPresupuesto && (
+    <p style={styles.errorPresupuesto}>{errorPresupuesto}</p>
+  )}
+
+  {conceptosPresupuesto.length === 0 ? (
+    <p style={styles.vacioPresupuesto}>
+      Todavía no hay conceptos en el presupuesto.
+    </p>
+  ) : (
+    <div style={styles.tablaPresupuestoContenedor}>
+      <table style={styles.tablaPresupuesto}>
+        <thead>
+          <tr>
+            <th style={styles.thPresupuesto}>Concepto</th>
+            <th style={styles.thPresupuestoNumero}>Cantidad</th>
+            <th style={styles.thPresupuestoNumero}>Precio unitario</th>
+            <th style={styles.thPresupuestoNumero}>Total</th>
+            <th style={styles.thPresupuestoAccion}>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {conceptosPresupuesto.map((concepto) => (
+            <tr key={concepto.id}>
+              <td style={styles.tdPresupuesto}>{concepto.descripcion}</td>
+              <td style={styles.tdPresupuestoNumero}>
+                {concepto.cantidad}
+              </td>
+              <td style={styles.tdPresupuestoNumero}>
+                {formatearEuros(concepto.precioUnitario)}
+              </td>
+              <td style={styles.tdPresupuestoNumero}>
+                {formatearEuros(concepto.total)}
+              </td>
+              <td style={styles.tdPresupuestoAccion}>
+                <button
+                  type="button"
+                  onClick={() => eliminarConcepto(concepto.id)}
+                  style={styles.btnEliminarConcepto}
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <div style={styles.totalesPresupuesto}>
+    <div style={styles.filaTotal}>
+      <span>Subtotal</span>
+      <strong>{formatearEuros(subtotal)}</strong>
+    </div>
+
+    <label style={styles.labelIva}>
+      IVA (%)
+      <input
+        inputMode="decimal"
+        value={porcentajeIvaTexto}
+        onChange={(evento) => {
+          setPorcentajeIvaTexto(evento.target.value);
+          setMensajePresupuesto("");
+        }}
+        style={styles.inputIva}
+      />
+    </label>
+
+    {!ivaEsValido && (
+      <p style={styles.errorPresupuesto}>
+        El IVA debe ser un número entre 0 y 100.
+      </p>
+    )}
+
+    <div style={styles.filaTotal}>
+      <span>IVA</span>
+      <strong>
+        {ivaEsValido ? formatearEuros(importeIva) : "—"}
+      </strong>
+    </div>
+
+    <div style={styles.filaTotalFinal}>
+      <span>Total</span>
+      <strong>
+        {ivaEsValido ? formatearEuros(totalPresupuesto) : "—"}
+      </strong>
+    </div>
+  </div>
+
+  <div style={styles.accionesPresupuesto}>
+    <button
+      type="button"
+      onClick={guardarPresupuesto}
+      disabled={!puedeGuardarPresupuesto}
+      style={{
+        ...styles.btnGuardar,
+        opacity: puedeGuardarPresupuesto ? 1 : 0.5,
+        cursor: puedeGuardarPresupuesto ? "pointer" : "not-allowed",
+      }}
+    >
+      Guardar presupuesto
+    </button>
+  </div>
+
+  {mensajePresupuesto && (
+    <p style={styles.confirmacionPresupuesto}>{mensajePresupuesto}</p>
+  )}
 </section>
           <section style={styles.tarjetaCompleta}>
           <TituloSeccion Icono={IconoProgreso} titulo="Progreso de la orden" />
@@ -320,6 +520,155 @@ export default function DetalleOrden({
       fontSize: 14,
       fontWeight: "700",
       whiteSpace: "nowrap",
+    },
+
+    errorPresupuesto: {
+      margin: "14px 0 0",
+      padding: 12,
+      background: "#fef2f2",
+      color: "#dc2626",
+      borderRadius: 10,
+      fontWeight: "600",
+      fontSize: 14,
+    },
+
+    vacioPresupuesto: {
+      margin: "18px 0 0",
+      color: "#64748b",
+      fontSize: 15,
+    },
+
+    tablaPresupuestoContenedor: {
+      marginTop: 20,
+      overflowX: "auto",
+    },
+
+    tablaPresupuesto: {
+      width: "100%",
+      borderCollapse: "collapse",
+      fontSize: 14,
+    },
+
+    thPresupuesto: {
+      padding: "10px 8px",
+      textAlign: "left",
+      color: "#64748b",
+      borderBottom: "1px solid #e4e4e7",
+      fontWeight: "700",
+    },
+
+    thPresupuestoNumero: {
+      padding: "10px 8px",
+      textAlign: "right",
+      color: "#64748b",
+      borderBottom: "1px solid #e4e4e7",
+      fontWeight: "700",
+    },
+
+    thPresupuestoAccion: {
+      padding: "10px 8px",
+      textAlign: "right",
+      color: "#64748b",
+      borderBottom: "1px solid #e4e4e7",
+      fontWeight: "700",
+    },
+
+    tdPresupuesto: {
+      padding: "12px 8px",
+      color: "#27272a",
+      borderBottom: "1px solid #f1f5f9",
+    },
+
+    tdPresupuestoNumero: {
+      padding: "12px 8px",
+      textAlign: "right",
+      color: "#27272a",
+      borderBottom: "1px solid #f1f5f9",
+      whiteSpace: "nowrap",
+    },
+
+    tdPresupuestoAccion: {
+      padding: "12px 8px",
+      textAlign: "right",
+      borderBottom: "1px solid #f1f5f9",
+    },
+
+    btnEliminarConcepto: {
+      padding: "8px 12px",
+      background: "#ffffff",
+      color: "#dc2626",
+      border: "1px solid #fecaca",
+      borderRadius: 8,
+      cursor: "pointer",
+      fontSize: 13,
+      fontWeight: "700",
+    },
+
+    totalesPresupuesto: {
+      marginTop: 22,
+      maxWidth: 360,
+      marginLeft: "auto",
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+    },
+
+    filaTotal: {
+      display: "flex",
+      justifyContent: "space-between",
+      color: "#475569",
+      fontSize: 15,
+    },
+
+    filaTotalFinal: {
+      display: "flex",
+      justifyContent: "space-between",
+      color: "#27272a",
+      fontSize: 18,
+      fontWeight: "700",
+      paddingTop: 8,
+      borderTop: "1px solid #e4e4e7",
+    },
+
+    labelIva: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      color: "#3f3f46",
+      fontSize: 13,
+      fontWeight: "600",
+    },
+
+    inputIva: {
+      width: 90,
+      boxSizing: "border-box",
+      padding: "10px 12px",
+      background: "#ffffff",
+      color: "#27272a",
+      border: "1px solid #d4d4d8",
+      borderRadius: 10,
+      fontSize: 15,
+      fontFamily: "inherit",
+      textAlign: "right",
+      outline: "none",
+    },
+
+    accionesPresupuesto: {
+      display: "flex",
+      justifyContent: "flex-end",
+      marginTop: 20,
+    },
+
+    confirmacionPresupuesto: {
+      margin: "14px 0 0",
+      padding: 12,
+      background: "#f0fdf4",
+      color: "#15803d",
+      borderRadius: 10,
+      fontWeight: "700",
+      fontSize: 14,
+      textAlign: "right",
     },
 
     pagina: {

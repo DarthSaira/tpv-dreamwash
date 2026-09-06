@@ -33,6 +33,7 @@ export function crearOrdenReparacion({
       presupuesto: {
         conceptos: [],
         subtotal: 0,
+        porcentajeIva: 21,
         iva: 0,
         total: 0,
         estado: "pendiente",
