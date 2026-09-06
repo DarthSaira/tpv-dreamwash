@@ -3,7 +3,7 @@ import DetalleOrden from "./DetalleOrden";
 import {
   obtenerColoresEstadoOr,
   obtenerEtiquetaEstadoOr,
-} from "../../models/ordenReparacion";
+} from "../../models/ordenreparacion";
 
 export default function Gestion({
   setPantalla,

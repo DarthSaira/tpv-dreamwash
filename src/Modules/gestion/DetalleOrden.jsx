@@ -10,11 +10,12 @@ import {
 } from "../../components/WorkshopIcons";
 import {
   ESTADOS_OR,
+  ESTADOS_PRESUPUESTO,
   obtenerColoresEstadoOr,
   obtenerEstadoAlGuardarDiagnostico,
   obtenerEtiquetaEstadoOr,
   obtenerProgresoOr,
-} from "../../models/ordenReparacion";
+} from "../../models/ordenreparacion";
 
 const IVA_POR_DEFECTO = 21;
 
@@ -88,9 +89,40 @@ export default function DetalleOrden({
   const puedeGuardarPresupuesto =
     conceptosPresupuesto.length > 0 && ivaEsValido;
 
+  const estadoPresupuesto =
+    orden.presupuesto?.estado || ESTADOS_PRESUPUESTO.PENDIENTE;
+  const presupuestoAprobado =
+    estadoPresupuesto === ESTADOS_PRESUPUESTO.APROBADO;
+  const presupuestoRechazado =
+    estadoPresupuesto === ESTADOS_PRESUPUESTO.RECHAZADO;
+  const presupuestoPendienteDeDecision =
+    orden.estado === ESTADOS_OR.PENDIENTE_APROBACION &&
+    estadoPresupuesto === ESTADOS_PRESUPUESTO.PENDIENTE;
+  const puedeDecidirPresupuesto =
+    presupuestoPendienteDeDecision && conceptosPresupuesto.length > 0;
+  const presupuestoEditable = !presupuestoAprobado;
+
   const progresoOr = obtenerProgresoOr(orden.estado);
 
+  const obtenerPresupuestoActualizado = (camposExtra) => ({
+    ...(orden.presupuesto || {}),
+    conceptos: conceptosPresupuesto,
+    subtotal,
+    porcentajeIva,
+    iva: importeIva,
+    total: totalPresupuesto,
+    fechaCreacion:
+      fechaCreacionPresupuesto ||
+      orden.presupuesto?.fechaCreacion ||
+      new Date().toISOString(),
+    ...camposExtra,
+  });
+
   const agregarConcepto = () => {
+    if (!presupuestoEditable) {
+      return;
+    }
+
     const descripcion = nuevoConcepto.descripcion.trim();
 
     const cantidad = parsearNumero(nuevoConcepto.cantidad);
@@ -141,6 +173,10 @@ export default function DetalleOrden({
   };
 
   const eliminarConcepto = (idConcepto) => {
+    if (!presupuestoEditable) {
+      return;
+    }
+
     setConceptosPresupuesto((conceptosActuales) =>
       conceptosActuales.filter((concepto) => concepto.id !== idConcepto)
     );
@@ -149,31 +185,80 @@ export default function DetalleOrden({
   };
 
   const guardarPresupuesto = () => {
-    if (!puedeGuardarPresupuesto) {
+    if (!puedeGuardarPresupuesto || !presupuestoEditable) {
       return;
     }
 
     const fechaCreacion =
-      fechaCreacionPresupuesto || new Date().toISOString();
+      fechaCreacionPresupuesto ||
+      orden.presupuesto?.fechaCreacion ||
+      new Date().toISOString();
 
     onActualizarOrden(orden.id, {
-      presupuesto: {
-        ...(orden.presupuesto || {}),
-        conceptos: conceptosPresupuesto,
-        subtotal,
-        porcentajeIva,
-        iva: importeIva,
-        total: totalPresupuesto,
-        estado: orden.presupuesto?.estado || "pendiente",
+      presupuesto: obtenerPresupuestoActualizado({
+        estado: ESTADOS_PRESUPUESTO.PENDIENTE,
         fechaCreacion,
-        fechaAprobacion: orden.presupuesto?.fechaAprobacion ?? null,
-      },
+        fechaAprobacion: null,
+        fechaRechazo: null,
+      }),
       estado: ESTADOS_OR.PENDIENTE_APROBACION,
     });
 
     setFechaCreacionPresupuesto(fechaCreacion);
     setErrorPresupuesto("");
     setMensajePresupuesto("Presupuesto guardado");
+  };
+
+  const aprobarPresupuesto = () => {
+    if (!puedeDecidirPresupuesto) {
+      return;
+    }
+
+    const confirmado = window.confirm(
+      "¿Confirmas que el cliente ha aprobado este presupuesto?"
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    onActualizarOrden(orden.id, {
+      presupuesto: obtenerPresupuestoActualizado({
+        estado: ESTADOS_PRESUPUESTO.APROBADO,
+        fechaAprobacion: new Date().toISOString(),
+        fechaRechazo: null,
+      }),
+      estado: ESTADOS_OR.PRESUPUESTO_APROBADO,
+    });
+
+    setErrorPresupuesto("");
+    setMensajePresupuesto("");
+  };
+
+  const rechazarPresupuesto = () => {
+    if (!puedeDecidirPresupuesto) {
+      return;
+    }
+
+    const confirmado = window.confirm(
+      "¿Confirmas que el cliente ha rechazado este presupuesto?"
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    onActualizarOrden(orden.id, {
+      presupuesto: obtenerPresupuestoActualizado({
+        estado: ESTADOS_PRESUPUESTO.RECHAZADO,
+        fechaAprobacion: null,
+        fechaRechazo: new Date().toISOString(),
+      }),
+      estado: ESTADOS_OR.PRESUPUESTO_RECHAZADO,
+    });
+
+    setErrorPresupuesto("");
+    setMensajePresupuesto("");
   };
   const guardarDiagnostico = () => {
     const descripcionLimpia = diagnostico.trim();
@@ -307,6 +392,35 @@ export default function DetalleOrden({
     titulo="Presupuesto"
   />
 
+  {presupuestoPendienteDeDecision && (
+    <div style={styles.avisoPresupuestoPendiente}>
+      Pendiente de aprobación
+    </div>
+  )}
+
+  {presupuestoAprobado && (
+    <div style={styles.avisoPresupuestoAprobado}>
+      <strong>Presupuesto aprobado</strong>
+      {orden.presupuesto?.fechaAprobacion && (
+        <span>
+          {new Date(orden.presupuesto.fechaAprobacion).toLocaleString("es-ES")}
+        </span>
+      )}
+    </div>
+  )}
+
+  {presupuestoRechazado && (
+    <div style={styles.avisoPresupuestoRechazado}>
+      <strong>Presupuesto rechazado</strong>
+      {orden.presupuesto?.fechaRechazo && (
+        <span>
+          {new Date(orden.presupuesto.fechaRechazo).toLocaleString("es-ES")}
+        </span>
+      )}
+    </div>
+  )}
+
+  {presupuestoEditable && (
   <div style={styles.formularioPresupuesto}>
     <label style={styles.labelPresupuesto}>
       Concepto
@@ -364,6 +478,7 @@ export default function DetalleOrden({
       Añadir concepto
     </button>
   </div>
+  )}
 
   {errorPresupuesto && (
     <p style={styles.errorPresupuesto}>{errorPresupuesto}</p>
@@ -382,7 +497,9 @@ export default function DetalleOrden({
             <th style={styles.thPresupuestoNumero}>Cantidad</th>
             <th style={styles.thPresupuestoNumero}>Precio unitario</th>
             <th style={styles.thPresupuestoNumero}>Total</th>
-            <th style={styles.thPresupuestoAccion}>Acción</th>
+            {presupuestoEditable && (
+              <th style={styles.thPresupuestoAccion}>Acción</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -398,6 +515,7 @@ export default function DetalleOrden({
               <td style={styles.tdPresupuestoNumero}>
                 {formatearEuros(concepto.total)}
               </td>
+              {presupuestoEditable && (
               <td style={styles.tdPresupuestoAccion}>
                 <button
                   type="button"
@@ -407,6 +525,7 @@ export default function DetalleOrden({
                   Eliminar
                 </button>
               </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -420,6 +539,7 @@ export default function DetalleOrden({
       <strong>{formatearEuros(subtotal)}</strong>
     </div>
 
+    {presupuestoEditable ? (
     <label style={styles.labelIva}>
       IVA (%)
       <input
@@ -432,8 +552,14 @@ export default function DetalleOrden({
         style={styles.inputIva}
       />
     </label>
+    ) : (
+    <div style={styles.filaTotal}>
+      <span>IVA (%)</span>
+      <strong>{porcentajeIvaTexto}</strong>
+    </div>
+    )}
 
-    {!ivaEsValido && (
+    {presupuestoEditable && !ivaEsValido && (
       <p style={styles.errorPresupuesto}>
         El IVA debe ser un número entre 0 y 100.
       </p>
@@ -454,6 +580,7 @@ export default function DetalleOrden({
     </div>
   </div>
 
+  {presupuestoEditable && (
   <div style={styles.accionesPresupuesto}>
     <button
       type="button"
@@ -468,6 +595,26 @@ export default function DetalleOrden({
       Guardar presupuesto
     </button>
   </div>
+  )}
+
+  {puedeDecidirPresupuesto && (
+    <div style={styles.accionesDecision}>
+      <button
+        type="button"
+        onClick={aprobarPresupuesto}
+        style={styles.btnAprobarPresupuesto}
+      >
+        Aprobar presupuesto
+      </button>
+      <button
+        type="button"
+        onClick={rechazarPresupuesto}
+        style={styles.btnRechazarPresupuesto}
+      >
+        Rechazar presupuesto
+      </button>
+    </div>
+  )}
 
   {mensajePresupuesto && (
     <p style={styles.confirmacionPresupuesto}>{mensajePresupuesto}</p>
@@ -707,6 +854,74 @@ export default function DetalleOrden({
       display: "flex",
       justifyContent: "flex-end",
       marginTop: 20,
+    },
+
+    accionesDecision: {
+      display: "flex",
+      justifyContent: "flex-end",
+      gap: 12,
+      marginTop: 16,
+      flexWrap: "wrap",
+    },
+
+    btnAprobarPresupuesto: {
+      padding: "12px 18px",
+      background: "#15803d",
+      color: "#ffffff",
+      border: "none",
+      borderRadius: 10,
+      fontSize: 15,
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+
+    btnRechazarPresupuesto: {
+      padding: "12px 18px",
+      background: "#ffffff",
+      color: "#dc2626",
+      border: "1px solid #fecaca",
+      borderRadius: 10,
+      fontSize: 15,
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+
+    avisoPresupuestoPendiente: {
+      margin: "0 0 18px",
+      padding: 12,
+      background: "#f5f3ff",
+      color: "#6d28d9",
+      borderRadius: 10,
+      fontWeight: "700",
+      fontSize: 14,
+    },
+
+    avisoPresupuestoAprobado: {
+      margin: "0 0 18px",
+      padding: 12,
+      background: "#f0fdf4",
+      color: "#15803d",
+      borderRadius: 10,
+      fontWeight: "700",
+      fontSize: 14,
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap",
+    },
+
+    avisoPresupuestoRechazado: {
+      margin: "0 0 18px",
+      padding: 12,
+      background: "#fef2f2",
+      color: "#dc2626",
+      borderRadius: 10,
+      fontWeight: "700",
+      fontSize: 14,
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap",
     },
 
     confirmacionPresupuesto: {

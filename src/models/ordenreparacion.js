@@ -1,3 +1,9 @@
+export const ESTADOS_PRESUPUESTO = {
+  PENDIENTE: "pendiente",
+  APROBADO: "aprobado",
+  RECHAZADO: "rechazado",
+};
+
 export const ESTADOS_OR = {
   RECIBIDA: "recibida",
   DIAGNOSTICADA: "diagnosticada",
@@ -121,9 +127,10 @@ export function crearOrdenReparacion({
         porcentajeIva: 21,
         iva: 0,
         total: 0,
-        estado: "pendiente",
+        estado: ESTADOS_PRESUPUESTO.PENDIENTE,
         fechaCreacion: null,
         fechaAprobacion: null,
+        fechaRechazo: null,
       },
     };
   }
