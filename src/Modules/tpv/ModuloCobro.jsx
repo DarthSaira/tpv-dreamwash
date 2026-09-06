@@ -34,7 +34,17 @@ export default function CobroRapido({ pantalla, setPantalla }) {
 
   const [ventas, setVentas] = useState(() => {
     const guardadas = localStorage.getItem("ventas");
-    return guardadas ? JSON.parse(guardadas) : [];
+
+    if (!guardadas) {
+      return [];
+    }
+
+    try {
+      const ventasGuardadas = JSON.parse(guardadas);
+      return Array.isArray(ventasGuardadas) ? ventasGuardadas : [];
+    } catch {
+      return [];
+    }
   });
 
   const [pasoPago, setPasoPago] = useState(false);

@@ -11,10 +11,17 @@ export default function App() {
     const ordenesGuardadas = localStorage.getItem(
       "yanlai-ordenes-reparacion"
     );
-  
-    return ordenesGuardadas
-      ? JSON.parse(ordenesGuardadas)
-      : [];
+
+    if (!ordenesGuardadas) {
+      return [];
+    }
+
+    try {
+      const ordenes = JSON.parse(ordenesGuardadas);
+      return Array.isArray(ordenes) ? ordenes : [];
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {

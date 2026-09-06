@@ -39,10 +39,5 @@ export function crearOrdenReparacion({
         fechaCreacion: null,
         fechaAprobacion: null,
       },
-
-diagnostico: {
-  descripcion: "",
-  fecha: null,
-},
     };
   }

@@ -24,7 +24,7 @@ export default function DetalleOrden({
   const [diagnostico, setDiagnostico] = useState(
     orden.diagnostico?.descripcion || ""
   );
-  const [conceptosPresupuesto, setConceptosPresupuesto] = useState(
+  const [, setConceptosPresupuesto] = useState(
     orden.presupuesto?.conceptos || []
   );
   
@@ -325,7 +325,7 @@ export default function DetalleOrden({
     pagina: {
       width: "100%",
       maxWidth: 1180,
-      minHeight: "100hv",
+      minHeight: "100vh",
       margin: "0 auto",
       padding: "34px 20px 56px",
       boxSizing: "border-box",
