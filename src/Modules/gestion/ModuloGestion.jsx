@@ -1,5 +1,9 @@
 import { useState } from "react";
 import DetalleOrden from "./DetalleOrden";
+import {
+  obtenerColoresEstadoOr,
+  obtenerEtiquetaEstadoOr,
+} from "../../models/ordenReparacion";
 
 export default function Gestion({
   setPantalla,
@@ -8,11 +12,21 @@ export default function Gestion({
 }) {
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
 
+  const actualizarOrdenDesdeDetalle = (idOrden, cambios) => {
+    onActualizarOrden(idOrden, cambios);
+
+    setOrdenSeleccionada((ordenActual) =>
+      ordenActual && ordenActual.id === idOrden
+        ? { ...ordenActual, ...cambios }
+        : ordenActual
+    );
+  };
+
   if (ordenSeleccionada) {
     return (
       <DetalleOrden
         orden={ordenSeleccionada}
-        onActualizarOrden={onActualizarOrden}
+        onActualizarOrden={actualizarOrdenDesdeDetalle}
         onVolver={() => setOrdenSeleccionada(null)}
       />
     );
@@ -83,13 +97,10 @@ export default function Gestion({
                 <div
   style={{
     ...styles.estado,
-    background:
-      orden.estado === "diagnosticada" ? "#dcfce7" : "#f5f3ff",
-    color:
-      orden.estado === "diagnosticada" ? "#15803d" : "#6d28d9",
+    ...obtenerColoresEstadoOr(orden.estado),
   }}
 >
-  {orden.estado}
+  {obtenerEtiquetaEstadoOr(orden.estado)}
 </div>
               </div>
 
@@ -257,7 +268,9 @@ const styles = {
     borderRadius: 999,
     fontSize: 12,
     fontWeight: "700",
-    textTransform: "capitalize",
+    textAlign: "center",
+    maxWidth: 160,
+    lineHeight: 1.3,
   },
 
   datos: {

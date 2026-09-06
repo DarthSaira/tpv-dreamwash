@@ -8,6 +8,13 @@ import {
   IconoProgreso,
   IconoVehiculo,
 } from "../../components/WorkshopIcons";
+import {
+  ESTADOS_OR,
+  obtenerColoresEstadoOr,
+  obtenerEstadoAlGuardarDiagnostico,
+  obtenerEtiquetaEstadoOr,
+  obtenerProgresoOr,
+} from "../../models/ordenReparacion";
 
 const IVA_POR_DEFECTO = 21;
 
@@ -80,6 +87,8 @@ export default function DetalleOrden({
 
   const puedeGuardarPresupuesto =
     conceptosPresupuesto.length > 0 && ivaEsValido;
+
+  const progresoOr = obtenerProgresoOr(orden.estado);
 
   const agregarConcepto = () => {
     const descripcion = nuevoConcepto.descripcion.trim();
@@ -159,6 +168,7 @@ export default function DetalleOrden({
         fechaCreacion,
         fechaAprobacion: orden.presupuesto?.fechaAprobacion ?? null,
       },
+      estado: ESTADOS_OR.PENDIENTE_APROBACION,
     });
 
     setFechaCreacionPresupuesto(fechaCreacion);
@@ -177,7 +187,7 @@ export default function DetalleOrden({
         descripcion: descripcionLimpia,
         fecha: new Date().toISOString(),
       },
-      estado: "diagnosticada",
+      estado: obtenerEstadoAlGuardarDiagnostico(orden.estado),
     });
   
     onVolver();
@@ -200,7 +210,14 @@ export default function DetalleOrden({
             </p>
           </div>
   
-          <div style={styles.estado}>{orden.estado}</div>
+          <div
+            style={{
+              ...styles.estado,
+              ...obtenerColoresEstadoOr(orden.estado),
+            }}
+          >
+            {obtenerEtiquetaEstadoOr(orden.estado)}
+          </div>
         </div>
   
         <div style={styles.contenido}>
@@ -460,19 +477,51 @@ export default function DetalleOrden({
           <TituloSeccion Icono={IconoProgreso} titulo="Progreso de la orden" />
   
             <div style={styles.progreso}>
-              <div style={styles.pasoActivo}>1. Recepción</div>
               <div
-  style={
-    orden.estado === "diagnosticada"
-      ? styles.pasoActivo
-      : styles.pasoPendiente
-  }
->
-  2. Diagnóstico
-</div>
-              <div style={styles.pasoPendiente}>3. Presupuesto</div>
-              <div style={styles.pasoPendiente}>4. Reparación</div>
-              <div style={styles.pasoPendiente}>5. Cobro</div>
+                style={
+                  progresoOr.recepcion
+                    ? styles.pasoActivo
+                    : styles.pasoPendiente
+                }
+              >
+                1. Recepción
+              </div>
+              <div
+                style={
+                  progresoOr.diagnostico
+                    ? styles.pasoActivo
+                    : styles.pasoPendiente
+                }
+              >
+                2. Diagnóstico
+              </div>
+              <div
+                style={
+                  progresoOr.presupuesto
+                    ? styles.pasoActivo
+                    : styles.pasoPendiente
+                }
+              >
+                3. Presupuesto
+              </div>
+              <div
+                style={
+                  progresoOr.reparacion
+                    ? styles.pasoActivo
+                    : styles.pasoPendiente
+                }
+              >
+                4. Reparación
+              </div>
+              <div
+                style={
+                  progresoOr.cobro
+                    ? styles.pasoActivo
+                    : styles.pasoPendiente
+                }
+              >
+                5. Cobro
+              </div>
             </div>
           </section>
         </div>
@@ -730,12 +779,12 @@ export default function DetalleOrden({
   
     estado: {
       padding: "10px 16px",
-      background: "#dcfce7",
-      color: "#15803d",
       borderRadius: 999,
       fontSize: 14,
       fontWeight: "800",
-      textTransform: "capitalize",
+      textAlign: "center",
+      maxWidth: 200,
+      lineHeight: 1.3,
     },
   
     contenido: {
