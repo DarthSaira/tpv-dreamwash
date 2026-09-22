@@ -83,7 +83,7 @@ export default function App() {
         </div>
                  ) : pantalla === "tpv" ? (
                   <div>
-                    <div style={{ marginBottom: 20 }}>
+                    <div className="no-print" style={{ marginBottom: 20 }}>
                       <button
                         onClick={() => setPantalla("home")}
                         style={{

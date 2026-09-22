@@ -1,6 +1,7 @@
 export default function Sidebar({ pantalla, setPantalla }) {
     return (
       <div
+        className="no-print"
         style={{
           width: 220,
           background: "#1e293b",

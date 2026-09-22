@@ -1,163 +1,278 @@
+const formatearImporte = (valor) => {
+  const numero = Number(valor);
+
+  if (!Number.isFinite(numero)) {
+    return "—";
+  }
+
+  return `${numero.toFixed(2)}€`;
+};
+
+const formatearFecha = (fecha) => {
+  if (!fecha) {
+    return new Date().toLocaleString("es-ES");
+  }
+
+  const parseada = new Date(fecha);
+  if (!Number.isNaN(parseada.getTime()) && String(fecha).includes("T")) {
+    return parseada.toLocaleString("es-ES");
+  }
+
+  return String(fecha);
+};
+
+const etiquetaMetodoPago = (metodoPago) => {
+  if (metodoPago === "tarjeta") {
+    return "Tarjeta";
+  }
+
+  if (metodoPago === "efectivo") {
+    return "Efectivo";
+  }
+
+  return metodoPago || "—";
+};
+
 export default function Ticket({
-    styles,
-    seleccionados,
-    matricula,
-    modeloCoche,
-    subtotal,
-    iva,
-    total,
-    pasoPago,
-    metodoPago,
-    pagoCliente,
-    cambio,
-    eliminarServicioCompleto,
-    limpiarTicket,
-    setPasoPago,
-    handleCobrarEImprimir,
-  }) {
-    return (
-        <div style={styles.ticketFisico}>
-  <div style={{ textAlign: "center", marginBottom: 15 }}>
-    <h2 style={{ margin: "0 0 5px 0", fontSize: 22, fontWeight: "800", letterSpacing: "0.5px" }}>
-    YANLAI WORKSHOP
-    </h2>
+  styles,
+  seleccionados,
+  ventaRegistrada,
+  matricula,
+  modeloCoche,
+  total,
+  pasoPago,
+  metodoPago,
+  pagoCliente,
+  cambio,
+  errorCobro,
+  confirmando,
+  eliminarServicioCompleto,
+  limpiarTicket,
+  setPasoPago,
+  onConfirmarVenta,
+  onImprimir,
+  onNuevaVenta,
+}) {
+  const esResultado = Boolean(ventaRegistrada);
+  const lineas = esResultado
+    ? ventaRegistrada.servicios || []
+    : seleccionados;
+  const totalMostrado = esResultado ? ventaRegistrada.total : total;
+  const metodoMostrado = esResultado ? ventaRegistrada.metodoPago : metodoPago;
+  const matriculaMostrada = esResultado
+    ? ventaRegistrada.matricula
+    : matricula;
+  const modeloMostrado = esResultado
+    ? ventaRegistrada.modeloCoche
+    : modeloCoche;
+  const mostrarPago =
+    esResultado || (seleccionados.length > 0 && pasoPago);
+  const entregado = esResultado
+    ? ventaRegistrada.importeRecibido
+    : pagoCliente;
+  const cambioMostrado = esResultado ? ventaRegistrada.cambio : cambio;
 
-    <p style={{ margin: 0, fontSize: 12, color: "#6b7280" }}>
-      Ticket de Venta
-    </p>
+  return (
+    <div className="documento-prueba" style={styles.ticketFisico}>
+      <div style={{ textAlign: "center", marginBottom: 15 }}>
+        <h2
+          style={{
+            margin: "0 0 8px 0",
+            fontSize: 20,
+            fontWeight: "800",
+            letterSpacing: "0.5px",
+          }}
+        >
+          YANLAI WORKSHOP
+        </h2>
 
-    <p style={{ margin: 0, fontSize: 11, color: "#9ca3af" }}>
-      Fecha: {new Date().toLocaleDateString()}
-    </p>
+        <p style={styles.avisoDocumentoPrueba}>DOCUMENTO DE PRUEBA</p>
+        <p style={styles.avisoSinValidez}>SIN VALIDEZ FISCAL</p>
 
-    {/* VEHÍCULO */}
-    {(matricula || modeloCoche) && (
-  <div style={styles.ticketCocheBox}>
-    <span style={{ fontWeight: "700" }}>VEHÍCULO: </span>
-    <span>{matricula || "S/M"}</span>
-    {modeloCoche && <span> ({modeloCoche})</span>}
-  </div>
-)}
-  </div>
-  <div style={styles.lineaDivisoria}></div>
+        <p style={{ margin: "8px 0 0 0", fontSize: 12 }}>
+          Fecha: {formatearFecha(esResultado ? ventaRegistrada.fecha : null)}
+        </p>
 
-<div style={{ minHeight: 120, padding: "5px 0" }}>
-  {seleccionados.length === 0 ? (
-    <p style={{ color: "#9ca3af", fontStyle: "italic", textAlign: "center", marginTop: 40 }}>
-      Sin servicios seleccionados
-    </p>
-  ) : (
-    <>
-      {seleccionados.map((s) => (
-        <div key={s.id} style={styles.filaTicketContainer}>
-          <div style={styles.filaTicket}>
-  <div>
-    <div style={{ fontWeight: "700" }}>
-      {s.cantidad}x {s.nombre}
-    </div>
+        {esResultado && (
+          <p style={{ margin: "6px 0 0 0", fontSize: 12 }}>
+            Referencia de prueba: {ventaRegistrada.id}
+          </p>
+        )}
 
-    <div
-      style={{
-        fontSize: 12,
-        color: "#64748b",
-        fontWeight: "400",
-      }}
-    >
-      {s.precio.toFixed(2)}€ × {s.cantidad}
-    </div>
-  </div>
-
-  <span>
-    {(s.precio * s.cantidad).toFixed(2)}€
-  </span>
-</div>
-
-          <button
-            className="btn-eliminar-ticket"
-            onClick={() => eliminarServicioCompleto(s.id)}
-            style={styles.btnEliminarLinea}
-          >
-            ❌
-          </button>
-        </div>
-      ))}
-
-      <div style={{ textAlign: "right", marginTop: 10 }} className="btn-eliminar-ticket">
-        <button onClick={limpiarTicket} style={styles.btnLimpiarTicket}>
-          🗑️ Limpiar Ticket
-        </button>
+        {(matriculaMostrada || modeloMostrado) && (
+          <div style={styles.ticketCocheBox}>
+            <span style={{ fontWeight: "700" }}>VEHÍCULO: </span>
+            <span>{matriculaMostrada || "S/M"}</span>
+            {modeloMostrado && <span> ({modeloMostrado})</span>}
+          </div>
+        )}
       </div>
+
       <div style={styles.lineaDivisoria}></div>
 
-<div style={{ padding: "5px 0" }}>
-  <div style={styles.filaTicketSecundaria}>
-    <span>Base Imponible:</span>
-    <span>{subtotal.toFixed(2)}€</span>
-  </div>
+      <div style={{ minHeight: 80, padding: "5px 0" }}>
+        {lineas.length === 0 ? (
+          <p
+            style={{
+              color: "#333",
+              fontStyle: "italic",
+              textAlign: "center",
+              marginTop: 24,
+            }}
+          >
+            Sin servicios seleccionados
+          </p>
+        ) : (
+          lineas.map((s) => {
+            const cantidad = Number(s.cantidad) || 1;
+            const precio = Number(s.precio);
+            const importeLinea = Number.isFinite(precio)
+              ? precio * cantidad
+              : null;
 
-  <div style={styles.filaTicketSecundaria}>
-    <span>I.V.A. (21%):</span>
-    <span>{iva.toFixed(2)}€</span>
-  </div>
+            return (
+              <div key={s.id} style={styles.filaTicketContainer}>
+                <div style={styles.filaTicket} className="linea-documento">
+                  <div>
+                    <div style={{ fontWeight: "700" }}>
+                      {cantidad}x {s.nombre || "Servicio"}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: "400" }}>
+                      {formatearImporte(precio)} × {cantidad}
+                    </div>
+                  </div>
+                  <span>{formatearImporte(importeLinea)}</span>
+                </div>
 
-  <div style={{ ...styles.filaTicket, fontSize: 19, marginTop: 8, color: "#000" }}>
-    <span>TOTAL:</span>
-    <span>{total.toFixed(2)}€</span>
-  </div>
+                {!esResultado && (
+                  <button
+                    type="button"
+                    className="no-print"
+                    onClick={() => eliminarServicioCompleto(s.id)}
+                    style={styles.btnEliminarLinea}
+                    aria-label={`Quitar ${s.nombre}`}
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
 
-  {seleccionados.length > 0 && pasoPago && (
-  <div style={{ marginTop: 10, fontSize: 12, borderTop: "1px dashed #cbd5e1", paddingTop: 8 }}>
-    <div style={styles.filaTicketSecundaria}>
-      <span>Forma de pago:</span>
-      <span style={{ textTransform: "uppercase", fontWeight: "bold" }}>
-        {metodoPago}
-      </span>
+      {!esResultado && seleccionados.length > 0 && (
+        <div
+          style={{ textAlign: "right", marginTop: 10 }}
+          className="no-print"
+        >
+          <button
+            type="button"
+            onClick={limpiarTicket}
+            style={styles.btnLimpiarTicket}
+          >
+            Vaciar selección
+          </button>
+        </div>
+      )}
+
+      {lineas.length > 0 && (
+        <>
+          <div style={styles.lineaDivisoria}></div>
+
+          <div style={{ padding: "5px 0" }} className="bloque-totales-documento">
+            <div style={{ ...styles.filaTicket, fontSize: 19, marginTop: 8 }}>
+              <span>TOTAL:</span>
+              <span>{formatearImporte(totalMostrado)}</span>
+            </div>
+
+            {mostrarPago && (
+              <div
+                style={{
+                  marginTop: 10,
+                  fontSize: 12,
+                  borderTop: "1px dashed #000",
+                  paddingTop: 8,
+                }}
+              >
+                <div style={styles.filaTicketSecundaria}>
+                  <span>Forma de pago:</span>
+                  <span style={{ fontWeight: "bold" }}>
+                    {etiquetaMetodoPago(metodoMostrado)}
+                  </span>
+                </div>
+
+                {metodoMostrado === "efectivo" &&
+                  Number.isFinite(Number(entregado)) && (
+                    <>
+                      <div style={styles.filaTicketSecundaria}>
+                        <span>Entregado:</span>
+                        <span>{formatearImporte(entregado)}</span>
+                      </div>
+                      <div style={styles.filaTicketSecundaria}>
+                        <span>Cambio:</span>
+                        <span>{formatearImporte(cambioMostrado)}</span>
+                      </div>
+                    </>
+                  )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {esResultado && (
+        <p style={styles.avisoVentaRegistrada}>Venta de prueba registrada</p>
+      )}
+
+      <div className="no-print" style={{ marginTop: 20 }}>
+        {errorCobro && <p style={styles.errorCobro}>{errorCobro}</p>}
+
+        {!esResultado && seleccionados.length > 0 && (
+          <>
+            {!pasoPago ? (
+              <button
+                type="button"
+                onClick={() => setPasoPago(true)}
+                style={styles.btnContinuarPago}
+              >
+                Continuar al cobro
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onConfirmarVenta}
+                disabled={confirmando}
+                style={{
+                  ...styles.btnCobrar,
+                  opacity: confirmando ? 0.6 : 1,
+                }}
+              >
+                {confirmando ? "Registrando…" : "Confirmar venta"}
+              </button>
+            )}
+          </>
+        )}
+
+        {esResultado && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              type="button"
+              onClick={onImprimir}
+              style={styles.btnCobrar}
+            >
+              Imprimir documento de prueba
+            </button>
+            <button
+              type="button"
+              onClick={onNuevaVenta}
+              style={styles.btnContinuarPago}
+            >
+              Nueva venta
+            </button>
+          </div>
+        )}
+      </div>
     </div>
-
-    {metodoPago === "efectivo" && pagoCliente && (
-      <>
-        <div style={styles.filaTicketSecundaria}>
-          <span>Entregado:</span>
-          <span>{Number(pagoCliente).toFixed(2)}€</span>
-        </div>
-
-        <div style={styles.filaTicketSecundaria}>
-          <span>Cambio:</span>
-          <span>{cambio.toFixed(2)}€</span>
-        </div>
-      </>
-    )}
-  </div>
-)}
-</div>
-
-{seleccionados.length > 0 && (
-  <div className="no-imprimir" style={{ marginTop: 20 }}>
-    {!pasoPago ? (
-      <button
-        onClick={() => setPasoPago(true)}
-        style={styles.btnContinuarPago}
-        className="btn-flujo"
-      >
-        Continuar al Pago ➡️
-      </button>
-    ) : (
-      <button
-        onClick={handleCobrarEImprimir}
-        className="btn-cobrar"
-        style={styles.btnCobrar}
-      >
-        💳 Cobrar e Imprimir Ticket
-      </button>
-    )}
-  </div>
-)}
-<div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "#6b7280" }}>
-  <p style={{ margin: 0 }}>¡Gracias por su visita!</p>
-</div>
-    </>
-  )}
-</div>
-</div>
-      );
-  }
+  );
+}
