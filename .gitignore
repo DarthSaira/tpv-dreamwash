@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Bases SQLite del taller. No versionar datos de piloto ni de desarrollo.
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

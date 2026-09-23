@@ -1,10 +1,14 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import ServicioPersonalizado from "../../components/ServicioPersonalizado";
 import Ticket from "../../components/Ticket";
 import { esListaParaFacturar } from "../../models/ordenreparacion";
-
-const CLAVE_VENTAS = "ventas";
+import {
+  crearReferenciaPrueba,
+  obtenerVentas,
+  prepararVentaParaApi,
+  registrarVentaRemota,
+} from "../../api/ventasRapidas";
 
 const formatearEuros = (valor) => {
   if (!Number.isFinite(Number(valor))) {
@@ -39,11 +43,6 @@ const parsearImporte = (texto) => {
   return { vacio: false, valido: true, valor: redondearImporte(numero) };
 };
 
-const crearIdPrueba = () => {
-  const aleatorio = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `TEST-${Date.now()}-${aleatorio}`;
-};
-
 const copiarServicios = (servicios) =>
   (Array.isArray(servicios) ? servicios : []).map((servicio) => ({
     id: servicio.id,
@@ -51,24 +50,6 @@ const copiarServicios = (servicios) =>
     precio: Number(servicio.precio),
     cantidad: Number(servicio.cantidad) || 1,
   }));
-
-const leerVentasGuardadas = () => {
-  const guardadas = localStorage.getItem(CLAVE_VENTAS);
-
-  if (!guardadas) {
-    return { ventas: [], error: "" };
-  }
-
-  try {
-    const ventasGuardadas = JSON.parse(guardadas);
-    if (!Array.isArray(ventasGuardadas)) {
-      return { ventas: [], error: "No se han podido leer las ventas guardadas." };
-    }
-    return { ventas: ventasGuardadas, error: "" };
-  } catch {
-    return { ventas: [], error: "No se han podido leer las ventas guardadas." };
-  }
-};
 
 const obtenerTotalVenta = (venta) => {
   const total = Number(venta?.total);
@@ -139,9 +120,9 @@ export default function CobroRapido({
   const [matricula, setMatricula] = useState("");
   const [modeloCoche, setModeloCoche] = useState("");
 
-  const [lecturaInicial] = useState(leerVentasGuardadas);
-  const [ventas, setVentas] = useState(lecturaInicial.ventas);
-  const [errorLecturaVentas] = useState(lecturaInicial.error);
+  const [ventas, setVentas] = useState([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(true);
+  const [errorHistorial, setErrorHistorial] = useState("");
 
   const [pasoPago, setPasoPago] = useState(false);
   const [mostrarPersonalizado, setMostrarPersonalizado] = useState(false);
@@ -151,6 +132,38 @@ export default function CobroRapido({
   const [ventaRegistrada, setVentaRegistrada] = useState(null);
   const [confirmando, setConfirmando] = useState(false);
   const confirmandoRef = useRef(false);
+  const intentoVentaRef = useRef(null);
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerVentas()
+      .then((ventasGuardadas) => {
+        if (!activo) {
+          return;
+        }
+        setVentas(ventasGuardadas);
+        setErrorHistorial("");
+      })
+      .catch(() => {
+        if (!activo) {
+          return;
+        }
+        setVentas([]);
+        setErrorHistorial(
+          "No se ha podido cargar el historial. Comprueba que el servidor del taller está en marcha."
+        );
+      })
+      .finally(() => {
+        if (activo) {
+          setCargandoHistorial(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   const agregarServicio = (servicio) => {
     if (ventaRegistrada) {
@@ -233,7 +246,6 @@ export default function CobroRapido({
     }
 
     let importeRecibido = total;
-    let cambioFinal = 0;
 
     if (metodoPago === "efectivo") {
       if (importeParseado.vacio) {
@@ -252,42 +264,53 @@ export default function CobroRapido({
       }
 
       importeRecibido = importeParseado.valor;
-      cambioFinal = redondearImporte(importeRecibido - total);
+    }
+
+    const firmaIntento = JSON.stringify({
+      servicios: copiarServicios(seleccionados),
+      matricula,
+      modeloCoche,
+      metodoPago,
+      importeRecibido,
+    });
+
+    if (!intentoVentaRef.current || intentoVentaRef.current.firma !== firmaIntento) {
+      intentoVentaRef.current = {
+        firma: firmaIntento,
+        payload: prepararVentaParaApi({
+          id: crearReferenciaPrueba(),
+          createdAt: new Date().toISOString(),
+          matricula,
+          modeloCoche,
+          metodoPago,
+          servicios: copiarServicios(seleccionados),
+          importeRecibidoEuros: importeRecibido,
+        }),
+      };
     }
 
     confirmandoRef.current = true;
     setConfirmando(true);
-
-    const serviciosVendidos = copiarServicios(seleccionados);
-    const nuevaVenta = {
-      id: crearIdPrueba(),
-      fecha: new Date().toISOString(),
-      matricula,
-      modeloCoche,
-      servicios: serviciosVendidos,
-      total,
-      metodoPago,
-      importeRecibido,
-      pagoCliente: importeRecibido,
-      cambio: cambioFinal,
-      esPrueba: true,
-      sinValidezFiscal: true,
-    };
-
-    const nuevasVentas = [nuevaVenta, ...ventas];
-
-    try {
-      localStorage.setItem(CLAVE_VENTAS, JSON.stringify(nuevasVentas));
-    } catch {
-      confirmandoRef.current = false;
-      setConfirmando(false);
-      setErrorCobro("No se ha podido guardar la venta. Inténtalo de nuevo.");
-      return;
-    }
-
-    setVentas(nuevasVentas);
-    setVentaRegistrada(nuevaVenta);
     setErrorCobro("");
+
+    registrarVentaRemota(intentoVentaRef.current.payload)
+      .then((ventaGuardada) => {
+        intentoVentaRef.current = null;
+        setVentas((actuales) =>
+          actuales.some((venta) => venta.id === ventaGuardada.id)
+            ? actuales
+            : [ventaGuardada, ...actuales]
+        );
+        setVentaRegistrada(ventaGuardada);
+        setErrorCobro("");
+      })
+      .catch((error) => {
+        confirmandoRef.current = false;
+        setConfirmando(false);
+        setErrorCobro(
+          error?.message || "No se ha podido registrar la venta. Inténtalo de nuevo."
+        );
+      });
   };
 
   const imprimirDocumento = () => {
@@ -296,6 +319,7 @@ export default function CobroRapido({
 
   const iniciarNuevaVenta = () => {
     confirmandoRef.current = false;
+    intentoVentaRef.current = null;
     setConfirmando(false);
     setVentaRegistrada(null);
     limpiarTicket();
@@ -559,18 +583,18 @@ export default function CobroRapido({
 
       <div style={styles.card} className="no-print">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: "1px solid #f3f4f6", paddingBottom: 10, marginBottom: 15 }}>
-          <h2 style={{ ...styles.tituloSeccion, border: 'none', margin: 0 }}>Ventas de prueba del día</h2>
+          <h2 style={{ ...styles.tituloSeccion, border: 'none', margin: 0 }}>Ventas de prueba</h2>
 
           <div style={{ textAlign: 'right', fontSize: 14, color: '#4b5563' }}>
               Efectivo: <b>{totalEfectivo.toFixed(2)}€</b> | Tarjeta: <b>{totalTarjeta.toFixed(2)}€</b> | Total: <b style={{ color: '#2563eb' }}>{totalCaja.toFixed(2)}€</b>
           </div>
         </div>
 
-        {errorLecturaVentas && (
-          <p style={styles.errorCobro}>{errorLecturaVentas}</p>
-        )}
-
-        {ventas.length === 0 ? (
+        {cargandoHistorial ? (
+          <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 14 }}>Cargando ventas de prueba…</p>
+        ) : errorHistorial ? (
+          <p style={styles.errorCobro}>{errorHistorial}</p>
+        ) : ventas.length === 0 ? (
           <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 14 }}>No hay ventas de prueba registradas.</p>
         ) : (
           <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
